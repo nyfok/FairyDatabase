@@ -1,4 +1,7 @@
 Imports System
+Imports System.IO
+Imports System.Security.AccessControl
+Imports System.Threading
 
 Module Program
     Sub Main(args As String())
@@ -22,33 +25,58 @@ Module Program
 
         'Console.WriteLine(DataPage.GetDataIndexPOS(33))
 
-        TestMultipleThreadWrite()
+        TestMultipleThread()
+        'MutexACL.Test2()
+
 
         Console.WriteLine("finished")
         Console.ReadLine()
     End Sub
 
-    Private Sub TestMultipleThreadWrite()
+    Private Sub Test()
+        'code here will be executed when the time elapse
+
+        Console.WriteLine("TEST!!!")
+    End Sub
+
+    Private Sub TestMultipleThread()
 
         For ThreadID = 1 To 10
-            System.Threading.ThreadPool.QueueUserWorkItem(New System.Threading.WaitCallback(AddressOf TestMultipleThreadWriteDO), ThreadID)
+            System.Threading.ThreadPool.QueueUserWorkItem(New System.Threading.WaitCallback(AddressOf TesWrite), ThreadID)
+
         Next
 
     End Sub
 
-    Private Sub TestMultipleThreadWriteDO(ByVal ThreadID As Integer)
+    Private Sub TesWrite(ByVal ThreadID As Integer)
 
         Dim fbytes As Byte() = System.IO.File.ReadAllBytes("temp/pictures.zip")
 
-        For i = 1 To 30
+        For i = 1 To 50
             Console.WriteLine(ThreadID & ": " & i)
 
             Dim fdata As New Data(i, fbytes)
-            DataPage.WriteData(fdata)
+            Page.Write(fdata)
 
         Next
 
     End Sub
+
+    Private Sub TestSharedMemory(ByVal ThreadID As Integer)
+        Dim FBytes(3) As Byte
+        For I = 0 To FBytes.Length - 1
+            FBytes(I) = I
+        Next
+
+        Dim FSM As New SharedMemory("Test", 100)
+        For i = 1 To 100
+            FSM.Write(FBytes)
+            Dim FBytes2 As Byte() = FSM.Read(97)
+            Console.WriteLine(FBytes2(2))
+        Next
+    End Sub
+
+
 
 
 End Module
