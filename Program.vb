@@ -41,8 +41,9 @@ Module Program
 
     Private Sub TestMultipleThread()
 
-        For ThreadID = 1 To 10
+        For ThreadID = 1 To 2
             System.Threading.ThreadPool.QueueUserWorkItem(New System.Threading.WaitCallback(AddressOf TesWrite), ThreadID)
+            'System.Threading.ThreadPool.QueueUserWorkItem(New System.Threading.WaitCallback(AddressOf TesRead), ThreadID)
 
         Next
 
@@ -51,12 +52,30 @@ Module Program
     Private Sub TesWrite(ByVal ThreadID As Integer)
 
         Dim fbytes As Byte() = System.IO.File.ReadAllBytes("temp/pictures.zip")
+        ReDim Preserve fbytes(fbytes.Length + 1)
 
-        For i = 1 To 50
+        For i = 1 To 10
             Console.WriteLine(ThreadID & ": " & i)
 
             Dim fdata As New Data(i, fbytes)
             Page.Write(fdata)
+
+        Next
+
+    End Sub
+
+
+    Private Sub TesRead(ByVal ThreadID As Integer)
+
+        For i = 1 To 10
+            Console.WriteLine(ThreadID & ": " & i)
+
+            Dim DataID As Int64 = i
+            Dim fdata As Data = Page.Read(DataID)
+
+            If fdata IsNot Nothing And fdata.Value IsNot Nothing Then
+                System.IO.File.WriteAllBytes("temp/" & ThreadID & "-" & i & ".zip", fdata.Value)
+            End If
 
         Next
 

@@ -16,10 +16,10 @@ Public Class Page
         'Cal FilePath
         If String.IsNullOrWhiteSpace(Config.DatabaseFolderPath) Then
             FilePath = Int(ID / Config.DataPageFolderSize) & "dpf\" & ID & "dp.fdb" 'DPF means data page folder, DP means data page.
-            PendingRemoveBlocksFilePath = Int(ID / Config.DataPageFolderSize) & "dpf\" & ID & "dprm.fdb" 'DPF means data page folder, DPRM means data page pending remove data blocks.
+            PendingRemoveBlocksFilePath = Int(ID / Config.DataPageFolderSize) & "dpf\" & ID & "dprb.fdb" 'DPF means data page folder, DPRB means data page pending remove data blocks.
         Else
             FilePath = Config.DatabaseFolderPath.TrimEnd("\") & "\" & Int(ID / Config.DataPageFolderSize) & "dpf\" & ID & "dp.fdb"
-            PendingRemoveBlocksFilePath = Int(ID / Config.DataPageFolderSize) & "dpf\" & ID & "dprm.fdb"
+            PendingRemoveBlocksFilePath = Config.DatabaseFolderPath.TrimEnd("\") & "\" & Int(ID / Config.DataPageFolderSize) & "dpf\" & ID & "dprb.fdb"
         End If
 
         'Check if need to Create PageFile
@@ -33,7 +33,7 @@ Public Class Page
 
         'Check if need to Create PendingRemoveBlocksFile
         RemoveBlocksFileMutex = New MutexACL("FDBPRB" & ID & "Operate")
-        If File.Exists(PendingRemoveBlocksFilePath) Then
+        If File.Exists(PendingRemoveBlocksFilePath) = False Then
             CreatePendingRemoveBlocksFile()
         End If
 
@@ -60,6 +60,7 @@ Public Class Page
 
         Dim FStream As New FileStream(FilePath, FileMode.CreateNew)
         FStream.SetLength(Config.DatabasePageFileInitSize)  'use to fast create file
+        FStream.Flush()
         FStream.Close()
         FStream.Dispose()
 
@@ -82,6 +83,7 @@ Public Class Page
         End If
 
         Dim FStream As New FileStream(PendingRemoveBlocksFilePath, FileMode.CreateNew)
+        FStream.Flush()
         FStream.Close()
         FStream.Dispose()
 
@@ -259,7 +261,7 @@ Public Class Page
 
 #End Region
 
-#Region "Write Data"
+#Region "Write/Read Data"
 
     Public Sub WriteData(ByRef FData As Data)
         'Check Input
@@ -319,8 +321,8 @@ Public Class Page
 
             'Make sure file length enough
             If FData.Length > 0 Then
-                Dim EndPOS As Int64 = FData.StartPOS + FData.Length - 1
-                If FileLength < EndPOS Then
+                Dim EndLength As Int64 = FData.StartPOS + FData.Length
+                If FileLength < EndLength Then
                     FStream.SetLength(FileLength + Config.DatabasePageFileInitSize)  'use to fast create file
                 End If
             End If
@@ -332,6 +334,11 @@ Public Class Page
                 Dim FStream2 As FileStream
                 FStream2 = File.Open(PendingRemoveBlocksFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
                 FStream2.Position = FStream2.Length
+
+                FStream2.Write(CurrentData.PageRemoveBlockBytes)
+                FStream2.Flush()
+                FStream2.Close()
+                FStream2.Dispose()
 
                 RemoveBlocksFileMutex.Release()
             End If
@@ -357,6 +364,67 @@ Public Class Page
 
     End Sub
 
+
+    Public Function ReadData(ByVal DataID As Int64) As Data
+        'Check Input
+        If DataID <= 0 Then Return Nothing
+
+        'Check If File Exists
+        If IfFileExists = False Then
+            If File.Exists(FilePath) Then
+                IfFileExists = True
+            Else
+                Return Nothing
+            End If
+        End If
+
+        'Init Parameters
+        Dim FData As New Data
+
+        'Get File Stream
+        Dim FStream As FileStream
+        FStream = File.Open(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+
+        'Read Data Index
+        Dim DataIndex As Byte() = ReadDataIndex(FStream, DataID)
+        FData.PageIndexBytes = DataIndex
+
+        If FData.ID = 0 AndAlso FData.Length = 0 AndAlso FData.StartPOS = 0 Then
+            'No Data Index
+            FData = Nothing
+        Else
+            'Has Data Index
+            If FData.ID = DataID Then
+                'Read Data
+                If FData.StartPOS > 0 AndAlso FData.Length > 0 Then
+                    'Make sure file length enough
+                    Dim EndLength As Int64 = FData.StartPOS + FData.Length
+                    If FileLength < EndLength Then
+                        'not enough length, not read bytes
+                    Else
+                        'Execute Read
+                        ReDim FData.Value(FData.Length - 1)
+
+                        FStream.Position = FData.StartPOS
+                        FStream.Read(FData.Value, 0, FData.Length)
+                    End If
+                End If
+            Else
+                'Error Data Index
+                FData = Nothing
+            End If
+
+        End If
+
+
+        'Close Stream
+        FStream.Flush()
+        FStream.Close()
+        FStream.Dispose()
+
+        'Return Value
+        Return FData
+    End Function
 
 #End Region
 
@@ -437,9 +505,31 @@ Public Class Page
 
     Private Shared Pages As New Concurrent.ConcurrentDictionary(Of Int64, Page)
     Private Shared CreatePageLock As New Object
+
     Public Shared Sub Write(ByVal FData As Data)
+        'Get Page
+        Dim FPage As Page = GetPage(FData.ID)
+
+        'Execute
+        FPage.WriteData(FData)
+    End Sub
+
+    Public Shared Function Read(ByVal DataID As Int64) As Data
+        'Get Page
+        Dim FPage As Page = GetPage(DataID)
+
+        'Execute
+        Return FPage.ReadData(DataID)
+    End Function
+
+
+    Public Shared Function GetPageID(ByVal DataID As Int64) As Int64
+        Return Int(DataID / Config.DataPageSize)
+    End Function
+
+    Public Shared Function GetPage(ByVal DataID As Int64) As Page
         'Get Page ID
-        Dim PageID As Int64 = GetPageID(FData.ID)
+        Dim PageID As Int64 = GetPageID(DataID)
 
         'Get Page
         If Pages.ContainsKey(PageID) = False Then
@@ -448,12 +538,8 @@ Public Class Page
             End SyncLock
         End If
 
-        'Execute
-        Pages(PageID).WriteData(FData)
-    End Sub
-
-    Public Shared Function GetPageID(ByVal DataID As Int64) As Int64
-        Return Int(DataID / Config.DataPageSize)
+        'Return Value
+        Return Pages(PageID)
     End Function
 
 #End Region
