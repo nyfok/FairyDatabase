@@ -8,7 +8,7 @@ Module Program
     Sub Main(args As String())
 
         'Execute Test
-        Select Case 2
+        Select Case 1
             Case 1
                 TestWrite.Start()
             Case 2

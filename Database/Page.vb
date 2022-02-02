@@ -10,12 +10,22 @@ Public Class Page
 
     Public PendingRemoveBlocksFilePath As String    'Page File's Pending Remove Data Blocks. StartPOS(8 Bytes)+BlockLength(6 Bytes)
 
+    Public DataIndexBufferWriter As FileBufferWriter
+    Public DataBlockBufferWriter As FileBufferWriter
+
+
     Public Sub New(ByVal ID As Int64)
         Me.ID = ID
 
         'Cal FilePath
         FilePath = GetPageFilePath(ID)
-        PendingRemoveBlocksFilePath = GetPageFilePath(ID)
+        PendingRemoveBlocksFilePath = GetPageRBFilePath(ID)
+
+        'Create LengthMutex
+        LengthMutex = New MutexACL("FDBP" & ID & "Length")
+
+        'Create Page SharedMemory
+        CreateMemory()
 
         'Check if need to Create PageFile
         If File.Exists(FilePath) Then
@@ -32,11 +42,11 @@ Public Class Page
             CreatePendingRemoveBlocksFile()
         End If
 
-        'Create LengthMutex
-        LengthMutex = New MutexACL("FDBP" & ID & "Length")
-
-        'Create Page SharedMemory
-        CreateMemory()
+        'Create Buffer Writer if SupportWriteBuffer
+        If Config.SupportWriteBuffer Then
+            DataIndexBufferWriter = New FileBufferWriter(FilePath, Config.DataPageWriteBufferSize, Config.WriteBufferFlushMSeconds)
+            DataBlockBufferWriter = New FileBufferWriter(FilePath, Config.DataPageWriteBufferSize, Config.WriteBufferFlushMSeconds)
+        End If
     End Sub
 
 
@@ -59,6 +69,7 @@ Public Class Page
         FStream.Close()
         FStream.Dispose()
 
+        WriteLengthToMemory(Config.DataPageHeaderSize)
         WriteLengthToFile(Config.DataPageHeaderSize)
 
         FMutexACL.Release()
@@ -167,6 +178,8 @@ Public Class Page
         'Write
         Dim FBytes As Byte() = BitConverter.GetBytes(Length)
         FStream.Write(FBytes)
+
+        Console.WriteLine("Write Length to File: " & Length)
     End Sub
 
 
@@ -189,15 +202,18 @@ Public Class Page
 
         'Execute
         Dim Length As Int64 = ReadLengthFromMemory()
+        'Console.WriteLine("Length from Memory: " & Length)
         StartPOS = Length
         Length = Length + AppendLength
 
         WriteLengthToMemory(Length)
+        'Console.WriteLine("Write Length to Memory: " & Length)
+
 
         'Flush to File each 3 seconds
         If UpdateLengthToFileTimer Is Nothing Then
             Dim FTimerCallback As TimerCallback = AddressOf UpdateLengthToFile
-            UpdateLengthToFileTimer = New Timer(FTimerCallback, Nothing, 3000, -1)
+            UpdateLengthToFileTimer = New Timer(FTimerCallback, Nothing, 1000, -1)
         End If
 
         'Release Sign
@@ -251,12 +267,11 @@ Public Class Page
             End If
             LengthMutex.Release()
         End If
-
     End Sub
 
 #End Region
 
-#Region "Write/Read Data"
+#Region "Write Data"
 
     Public Sub WriteData(ByRef FData As Data)
         'Check Input
@@ -339,17 +354,28 @@ Public Class Page
             End If
         End If
 
-        'Write Data Index
-        'Support Multiple Thread Write
-        FStream.Position = GetDataIndexPOS(FData.ID)
-        Dim PageIndexBytes As Byte() = FData.PageIndexBytes
-        FStream.Write(PageIndexBytes, 0, PageIndexBytes.Count)
+        'Write based on SupportWriteBuffer settings
+        If Config.SupportWriteBuffer = False Then
+            'Write Data Index
+            'Support Multiple Thread Write
+            FStream.Position = GetDataIndexPOS(FData.ID)
+            Dim PageIndexBytes As Byte() = FData.PageIndexBytes
+            FStream.Write(PageIndexBytes, 0, PageIndexBytes.Count)
 
-        'Write Data Block
-        'Support nothing write for pre-allocate byte space
-        If FData.StartPOS > 0 AndAlso FData.Value IsNot Nothing AndAlso FData.Value.Count > 0 Then
-            FStream.Position = FData.StartPOS
-            FStream.Write(FData.Value, 0, FData.Value.Count)
+            'Write Data Block
+            'Support nothing write for pre-allocate byte space
+            If FData.StartPOS > 0 AndAlso FData.Value IsNot Nothing AndAlso FData.Value.Count > 0 Then
+                FStream.Position = FData.StartPOS
+                FStream.Write(FData.Value, 0, FData.Value.Count)
+            End If
+        Else
+            'Write Data Index
+            DataIndexBufferWriter.Write(FStream, GetDataIndexPOS(FData.ID), FData.PageIndexBytesFull)
+
+            'Write Data Block
+            If FData.StartPOS > 0 AndAlso FData.Value IsNot Nothing AndAlso FData.Value.Count > 0 Then
+                DataBlockBufferWriter.Write(FStream, FData.StartPOS, FData.Value)
+            End If
         End If
 
         'Close Stream
@@ -360,6 +386,10 @@ Public Class Page
     End Sub
 
 
+#End Region
+
+
+#Region "Read Data"
     Public Function ReadData(ByVal DataID As Int64) As Data
         'Check Input
         If DataID <= 0 Then Return Nothing
@@ -411,7 +441,6 @@ Public Class Page
 
         End If
 
-
         'Close Stream
         FStream.Flush()
         FStream.Close()
@@ -455,10 +484,28 @@ Public Class Page
         If UpdateLengthToFileTimer IsNot Nothing Then
             Try
                 UpdateLengthToFileTimer.Dispose()
+                UpdateLengthToFileTimer = Nothing
             Catch ex As Exception
             End Try
             Try
                 UpdateLengthToFile()
+            Catch ex As Exception
+            End Try
+        End If
+
+        'Flush DataIndexBufferWriter, DataBlockBufferWriter
+        If DataIndexBufferWriter IsNot Nothing Then
+            Try
+                DataIndexBufferWriter.Dispose()
+                DataIndexBufferWriter = Nothing
+            Catch ex As Exception
+            End Try
+        End If
+
+        If DataBlockBufferWriter IsNot Nothing Then
+            Try
+                DataBlockBufferWriter.Dispose()
+                DataBlockBufferWriter = Nothing
             Catch ex As Exception
             End Try
         End If

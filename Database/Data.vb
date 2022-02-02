@@ -193,6 +193,14 @@
         End Set
     End Property
 
+    Public ReadOnly Property PageIndexBytesFull As Byte()
+        Get
+            Dim FBytes() As Byte = PageIndexBytes
+            ReDim Preserve FBytes(Config.DataPageHeaderDataIndexSize - 1)
+            Return FBytes
+        End Get
+    End Property
+
     Public Property PageRemoveBlockBytes As Byte()
         Get
             Dim FBytes(13) As Byte
