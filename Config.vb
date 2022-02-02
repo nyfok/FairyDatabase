@@ -3,7 +3,8 @@
     '================================= DATABASE CONFIG ============================================
 
     Public Shared DatabaseFolderPath As String = "db\" 'blank or end with \
-    Public Shared DatabasePageFileInitSize As Int64 = 100 * 1024 * 1024   '100M Bytes
+    'Public Shared DatabasePageFileInitSize As Int64 = 100 * 1024 * 1024   '100M Bytes
+    Public Shared DatabasePageFileInitSize As Int64 = 10 * 1024 * 1024   '100M Bytes
 
     Public Const DataPageSize As Int64 = 10000  'Store how many datas in one data page file
     Public Const DataPageFolderSize As Int64 = 1000   'Store how may data page files in one folder

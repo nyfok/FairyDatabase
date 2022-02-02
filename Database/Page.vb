@@ -14,13 +14,8 @@ Public Class Page
         Me.ID = ID
 
         'Cal FilePath
-        If String.IsNullOrWhiteSpace(Config.DatabaseFolderPath) Then
-            FilePath = Int(ID / Config.DataPageFolderSize) & "dpf\" & ID & "dp.fdb" 'DPF means data page folder, DP means data page.
-            PendingRemoveBlocksFilePath = Int(ID / Config.DataPageFolderSize) & "dpf\" & ID & "dprb.fdb" 'DPF means data page folder, DPRB means data page pending remove data blocks.
-        Else
-            FilePath = Config.DatabaseFolderPath.TrimEnd("\") & "\" & Int(ID / Config.DataPageFolderSize) & "dpf\" & ID & "dp.fdb"
-            PendingRemoveBlocksFilePath = Config.DatabaseFolderPath.TrimEnd("\") & "\" & Int(ID / Config.DataPageFolderSize) & "dpf\" & ID & "dprb.fdb"
-        End If
+        FilePath = GetPageFilePath(ID)
+        PendingRemoveBlocksFilePath = GetPageFilePath(ID)
 
         'Check if need to Create PageFile
         If File.Exists(FilePath) Then
@@ -243,7 +238,7 @@ Public Class Page
 
     Private Sub CreateMemory()
         'Create Memory
-        Dim MemorySize As Int64 = 100
+        Dim MemorySize As Int64 = 8
         Dim IfNewCreate As Boolean = False
         Memory = New SharedMemory("FDBP" & ID, MemorySize, IfNewCreate)
 
@@ -503,7 +498,7 @@ Public Class Page
 
 #Region "Shared Functions"
 
-    Private Shared Pages As New Concurrent.ConcurrentDictionary(Of Int64, Page)
+    Public Shared Pages As New Concurrent.ConcurrentDictionary(Of Int64, Page)
     Private Shared CreatePageLock As New Object
 
     Public Shared Sub Write(ByVal FData As Data)
@@ -522,6 +517,16 @@ Public Class Page
         Return FPage.ReadData(DataID)
     End Function
 
+    Public Shared Sub FlushAll()
+        For Each PageItem In Pages
+            If PageItem.Value IsNot Nothing Then
+                Try
+                    PageItem.Value.Flush()
+                Catch ex As Exception
+                End Try
+            End If
+        Next
+    End Sub
 
     Public Shared Function GetPageID(ByVal DataID As Int64) As Int64
         Return Int(DataID / Config.DataPageSize)
@@ -542,5 +547,22 @@ Public Class Page
         Return Pages(PageID)
     End Function
 
+    Public Shared Function GetPageFilePath(ByVal PageID As Int64) As String
+        If String.IsNullOrWhiteSpace(Config.DatabaseFolderPath) Then
+            Return Int(PageID / Config.DataPageFolderSize) & "dpf\" & PageID & "dp.fdb" 'DPF means data page folder, DP means data page.
+        Else
+            Return Config.DatabaseFolderPath.TrimEnd("\") & "\" & Int(PageID / Config.DataPageFolderSize) & "dpf\" & PageID & "dp.fdb"
+        End If
+    End Function
+
+    Public Shared Function GetPageRBFilePath(ByVal PageID As Int64) As String
+        If String.IsNullOrWhiteSpace(Config.DatabaseFolderPath) Then
+            Return Int(PageID / Config.DataPageFolderSize) & "dpf\" & PageID & "dprb.fdb" 'DPF means data page folder, DPRB means data page pending remove data blocks.
+        Else
+            Return Config.DatabaseFolderPath.TrimEnd("\") & "\" & Int(PageID / Config.DataPageFolderSize) & "dpf\" & PageID & "dprb.fdb"
+        End If
+    End Function
+
 #End Region
+
 End Class
