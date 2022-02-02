@@ -1,14 +1,16 @@
 ﻿Public Class TestWrite
 
-    Private Shared WriteNumber As Int64 = 100
-    Private Shared ByteSize As Int64 = 100
+    Private Shared WriteNumber As Int64 = 1000
+    Private Shared ByteSize As Int64 = 1000
 
     Private Shared WriteBytes(ByteSize - 1) As Byte
 
     Public Shared Sub Start()
         'Test Single Thread
-        TestWriteInSingleThread()
-        Console.ReadLine()
+        For TestNumber = 1 To 5
+            TestWriteInSingleThread()
+            Console.ReadLine()
+        Next
 
         'Test Multiple Threads
         For ThreadNumber = 1 To 16

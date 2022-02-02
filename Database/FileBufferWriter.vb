@@ -155,7 +155,7 @@ Public Class FileBufferWriter
         FStream.Position = StartPosition
         If Buffer IsNot Nothing AndAlso Buffer.Length >= BufferLength AndAlso BufferLength > 0 Then
             FStream.Write(Buffer, 0, BufferLength)
-            Console.WriteLine("Flush Position: " & StartPosition & ", Flush Length: " & BufferLength)
+            'Console.WriteLine("Flush Position: " & StartPosition & ", Flush Length: " & BufferLength)
         End If
 
         'Init Parameters
