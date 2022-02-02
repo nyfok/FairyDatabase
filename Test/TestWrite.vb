@@ -28,11 +28,10 @@
 
         'Exectue
         For Count = 1 To WriteNumber
-
             Dim FData As New Data(Count, WriteBytes)
             Page.Write(FData)
 
-            Console.WriteLine("Write " & Count & " ok.")
+            'Console.WriteLine("Write " & Count & " ok.")
         Next
 
         Page.FlushAll()
@@ -98,7 +97,7 @@
             Dim FData As New Data(DataID, WriteBytes)
             Page.Write(FData)
 
-            Console.WriteLine("(" & ThreadID & ") Write " & DataID & " ok.")
+            'Console.WriteLine("(" & ThreadID & ") Write " & DataID & " ok.")
         Loop
 
         'Set Signal
