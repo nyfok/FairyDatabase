@@ -1,8 +1,9 @@
 ﻿Public Class TestWrite
 
-    Private Shared ByteSize As Int64 = 1024
-    Private Shared TestWriteCount As Int64 = 100
-    Private Shared TestWriteBytes(ByteSize - 1) As Byte
+    Private Shared WriteNumber As Int64 = 100
+    Private Shared ByteSize As Int64 = 100
+
+    Private Shared WriteBytes(ByteSize - 1) As Byte
 
     Public Shared Sub Start()
         'Test Single Thread
@@ -10,9 +11,8 @@
         Console.ReadLine()
 
         'Test Multiple Threads
-        For TestThreadNumber = 1 To 16
-            ThreadNumber = TestThreadNumber
-            TestWriteInMultipleThreads()
+        For ThreadNumber = 1 To 16
+            TestWriteInMultipleThreads(ThreadNumber)
             Console.ReadLine()
         Next
     End Sub
@@ -27,9 +27,9 @@
         Dim StartTime As DateTime = Now
 
         'Exectue
-        For Count = 1 To TestWriteCount
+        For Count = 1 To WriteNumber
 
-            Dim FData As New Data(Count, TestWriteBytes)
+            Dim FData As New Data(Count, WriteBytes)
             Page.Write(FData)
 
             Console.WriteLine("Write " & Count & " ok.")
@@ -39,28 +39,29 @@
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim WriteSpeed As Decimal = TestWriteCount * TestWriteBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim WriteSpeed As Decimal = WriteNumber * WriteBytes.Length / 1024 / 1024 / MSeconds * 1000
         WriteSpeed = Int(WriteSpeed * 1000) / 1000
-        Dim WriteCopySpeed As Decimal = TestWriteCount / MSeconds * 1000
+        Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
-        Console.WriteLine("Single Thread using " & MSeconds & "ms. (ByteSize=" & TestWriteBytes.Length & ", Copies=" & TestWriteCount & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+        Console.WriteLine("Sequency write via single thread using " & MSeconds & "ms. (ByteSize=" & WriteBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
 
         PrintFileLength()
 
     End Sub
 
     Private Shared ManualResetEvents As Threading.ManualResetEvent()
-    Private Shared ThreadNumber As Integer
 
-    Private Shared Sub TestWriteInMultipleThreads()
+    Private Shared Sub TestWriteInMultipleThreads(ByVal ThreadNumber As Integer)
         'Clear Resources
         Clear()
         Console.WriteLine("Related resource cleared.")
 
         'Init Parameters
-        Dim StartTime As DateTime = Now
         ReDim ManualResetEvents(ThreadNumber - 1)
+        CurrentDataID = 0
+
+        Dim StartTime As DateTime = Now
 
         'Execute
         For ThreadID = 1 To ThreadNumber
@@ -77,12 +78,12 @@
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim WriteSpeed As Decimal = TestWriteCount * TestWriteBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim WriteSpeed As Decimal = WriteNumber * WriteBytes.Length / 1024 / 1024 / MSeconds * 1000
         WriteSpeed = Int(WriteSpeed * 1000) / 1000
-        Dim WriteCopySpeed As Decimal = TestWriteCount / MSeconds * 1000
+        Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
-        Console.WriteLine(ThreadNumber & " Multiple Thread using " & MSeconds & "ms. (ByteSize=" & TestWriteBytes.Length & ", Copies=" & TestWriteCount & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+        Console.WriteLine("Sequency write via " & ThreadNumber & " threads using " & MSeconds & "ms. (ByteSize=" & WriteBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
 
         PrintFileLength()
     End Sub
@@ -90,25 +91,35 @@
     Private Shared Sub TestWriteInMultipleThreadsDO(ByVal ThreadID As Integer)
 
         'Execute
-        For Count = 1 To TestWriteCount / ThreadNumber
+        Do While True
+            Dim DataID As Int64 = GetNextDataID()
+            If DataID > WriteNumber Then Exit Do
 
-            Dim DataID As Int64 = (ThreadID - 1) * TestWriteCount / ThreadNumber + Count
-
-            Dim FData As New Data(Count, TestWriteBytes)
+            Dim FData As New Data(DataID, WriteBytes)
             Page.Write(FData)
 
             Console.WriteLine("(" & ThreadID & ") Write " & DataID & " ok.")
-        Next
+        Loop
 
         'Set Signal
-        ManualResetEvents(ThreadID-1).Set()
+        ManualResetEvents(ThreadID - 1).Set()
     End Sub
+
+    Private Shared CurrentDataID As Int64 = 0
+    Private Shared GetNextDataIDLock As New Object
+    Private Shared Function GetNextDataID() As Int64
+        SyncLock GetNextDataIDLock
+            CurrentDataID = CurrentDataID + 1
+            Return CurrentDataID
+        End SyncLock
+    End Function
+
 
     Private Shared Sub PrintFileLength()
         For Each PageItem In Page.Pages
             If PageItem.Value IsNot Nothing Then
                 Try
-                    Console.WriteLine("Page " & PageItem.Value.ID & " Length = " & PageItem.Value.FileLength)
+                    Console.WriteLine("Page file " & PageItem.Value.ID & " Length = " & PageItem.Value.FileLength)
                 Catch ex As Exception
                     Console.WriteLine(ex.ToString)
                 End Try

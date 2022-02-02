@@ -1,25 +1,38 @@
 ﻿Public Class TestRead
 
-    Private Shared TestReadCount As Int64 = 100
-    Private Shared TestSpaceSize As Int64 = 500
+    Private Shared ReadNumber As Int64 = 100
+    Private Shared SpaceSize As Int64 = 500
     Private Shared ByteSize As Int64 = 1024
 
     Private Shared TestReadBytes(ByteSize - 1) As Byte
+    Private Shared RandomReadIDs As HashSet(Of Int64)
 
     Public Shared Sub Start()
-
         'Prepare Read Data
-        'Clear()    'force clear first
+        Clear()    'force clear first
         PrepareReadData()
 
+        'Init RandomReadIDs
+        Randomize()
+        RandomReadIDs = New HashSet(Of Int64)
+        Do While RandomReadIDs.Count < ReadNumber
+            Dim ID As Int64 = Int(Rnd() * SpaceSize) + 1
+            If RandomReadIDs.Contains(ID) = False Then RandomReadIDs.Add(ID)
+        Loop
+
         'Test Single Thread
-        TestReadInSingleThread()
+        TestReadInSingleThread(False)
+        Console.ReadLine()
+
+        TestReadInSingleThread(True)
         Console.ReadLine()
 
         'Test Multiple Threads
-        For TestThreadNumber = 1 To 16
-            ThreadNumber = TestThreadNumber
-            TestReadInMultipleThreads()
+        For ThreadNumber = 1 To 16
+            TestReadInMultipleThreads(ThreadNumber, False)
+            Console.ReadLine()
+
+            TestReadInMultipleThreads(ThreadNumber, True)
             Console.ReadLine()
         Next
     End Sub
@@ -27,7 +40,7 @@
     Private Shared Sub PrepareReadData()
         'Check if exists related Resources
         Dim IfAllPageExists As Boolean = True
-        Dim MaxPageID As Integer = Page.GetPageID(TestSpaceSize)
+        Dim MaxPageID As Integer = Page.GetPageID(SpaceSize)
         For PageID = 0 To MaxPageID
             Dim FilePath As String = Page.GetPageFilePath(PageID)
             If System.IO.File.Exists(FilePath) = False Then
@@ -44,7 +57,7 @@
         Clear()
 
         'Exectue
-        For Count = 1 To TestSpaceSize
+        For Count = 1 To SpaceSize
 
             Dim FData As New Data(Count, TestReadBytes)
             Page.Write(FData)
@@ -59,39 +72,53 @@
 
     End Sub
 
-    Private Shared Sub TestReadInSingleThread()
+    Private Shared Sub TestReadInSingleThread(ByVal IfRandomRead As Boolean)
 
         'Init Parameters
+        CurrentDataID = 0
+        NextDataIDs = New HashSet(Of Int64)
+        NextDataIDs.UnionWith(RandomReadIDs)
+
         Dim StartTime As DateTime = Now
 
         'Exectue
-        For Count = 1 To TestReadCount
+        Do While True
+            Dim DataID As Int64 = GetNextDataID(IfRandomRead)
+            If DataID <= 0 Then Exit Do
 
-            Dim FData As Data = Page.Read(Count)
+            Dim FData As Data = Page.Read(DataID)
 
-            Console.WriteLine("Read " & Count & " ok. (Value.Length=" & FData.Value.Length & ")")
-        Next
-
-        Page.FlushAll()
+            Console.WriteLine("Read " & DataID & " ok. (Value.Length=" & FData.Value.Length & ")")
+        Loop
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim ReadSpeed As Decimal = TestReadCount * TestReadBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim ReadSpeed As Decimal = ReadNumber * TestReadBytes.Length / 1024 / 1024 / MSeconds * 1000
         ReadSpeed = Int(ReadSpeed * 1000) / 1000
-        Dim ReadCopySpeed As Decimal = TestReadCount / MSeconds * 1000
+        Dim ReadCopySpeed As Decimal = ReadNumber / MSeconds * 1000
         ReadCopySpeed = Int(ReadCopySpeed)
 
-        Console.WriteLine("Single Thread using " & MSeconds & "ms. (ByteSize=" & TestReadBytes.Length & ", Copies=" & TestReadCount & ", ReadCopySpeed=" & ReadCopySpeed & "Copy/s, ReadSpeed=" & ReadSpeed & "MB/s)")
-
+        Dim ReadWayString As String
+        If IfRandomRead Then
+            ReadWayString = "Random"
+        Else
+            ReadWayString = "Sequency"
+        End If
+        Console.WriteLine(ReadWayString & " read via single thread using " & MSeconds & "ms. (ByteSize=" & TestReadBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & "Copy/s, ReadSpeed=" & ReadSpeed & "MB/s)")
     End Sub
 
     Private Shared ManualResetEvents As Threading.ManualResetEvent()
-    Private Shared ThreadNumber As Integer
-
-    Private Shared Sub TestReadInMultipleThreads()
+    Private Shared TestReadInMultipleThreads_IfRandomRead As Boolean
+    Private Shared Sub TestReadInMultipleThreads(ByVal ThreadNumber As Integer, ByVal IfRandomRead As Boolean)
         'Init Parameters
-        Dim StartTime As DateTime = Now
         ReDim ManualResetEvents(ThreadNumber - 1)
+        TestReadInMultipleThreads_IfRandomRead = IfRandomRead
+
+        CurrentDataID = 0
+        NextDataIDs = New HashSet(Of Int64)
+        NextDataIDs.UnionWith(RandomReadIDs)
+
+        Dim StartTime As DateTime = Now
 
         'Execute
         For ThreadID = 1 To ThreadNumber
@@ -108,30 +135,58 @@
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim ReadSpeed As Decimal = TestReadCount * TestReadBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim ReadSpeed As Decimal = ReadNumber * TestReadBytes.Length / 1024 / 1024 / MSeconds * 1000
         ReadSpeed = Int(ReadSpeed * 1000) / 1000
-        Dim ReadCopySpeed As Decimal = TestReadCount / MSeconds * 1000
+        Dim ReadCopySpeed As Decimal = ReadNumber / MSeconds * 1000
         ReadCopySpeed = Int(ReadCopySpeed)
 
-        Console.WriteLine(ThreadNumber & " Multiple Thread using " & MSeconds & "ms. (ByteSize=" & TestReadBytes.Length & ", Copies=" & TestReadCount & ", ReadCopySpeed=" & ReadCopySpeed & "Copy/s, ReadSpeed=" & ReadSpeed & "MB/s)")
-
+        Dim ReadWayString As String
+        If IfRandomRead Then
+            ReadWayString = "Random"
+        Else
+            ReadWayString = "Sequency"
+        End If
+        Console.WriteLine(ReadWayString & " read via " & ThreadNumber & " Threads using " & MSeconds & "ms. (ByteSize=" & TestReadBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & "Copy/s, ReadSpeed=" & ReadSpeed & "MB/s)")
     End Sub
 
     Private Shared Sub TestReadInMultipleThreadsDO(ByVal ThreadID As Integer)
 
         'Execute
-        For Count = 1 To TestReadCount / ThreadNumber
-
-            Dim DataID As Int64 = (ThreadID - 1) * TestReadCount / ThreadNumber + Count
+        Do While True
+            Dim DataID As Int64 = GetNextDataID(TestReadInMultipleThreads_IfRandomRead)
+            If DataID <= 0 Then Exit Do
 
             Dim FData As Data = Page.Read(DataID)
 
             Console.WriteLine("(" & ThreadID & ") Read " & DataID & " ok. (Value.Length=" & FData.Value.Length & ")")
-        Next
+        Loop
 
         'Set Signal
         ManualResetEvents(ThreadID - 1).Set()
     End Sub
+
+    Private Shared CurrentDataID As Int64 = 0
+    Private Shared GetNextDataIDLock As New Object
+    Private Shared NextDataIDs As HashSet(Of Int64)
+
+    Private Shared Function GetNextDataID(ByVal IfRandomRead As Boolean) As Int64
+        SyncLock GetNextDataIDLock
+            If IfRandomRead = False Then
+                CurrentDataID = CurrentDataID + 1
+                If CurrentDataID <= ReadNumber Then
+                    Return CurrentDataID
+                Else
+                    Return 0
+                End If
+            Else
+                If NextDataIDs.Count = 0 Then Return 0
+
+                CurrentDataID = NextDataIDs.First
+                NextDataIDs.Remove(CurrentDataID)
+                Return CurrentDataID
+            End If
+        End SyncLock
+    End Function
 
     Private Shared Sub PrintFileLength()
         For Each PageItem In Page.Pages
