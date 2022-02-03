@@ -3,7 +3,7 @@
 Public Class WritePerformanceTest
 
     Private Shared WriteNumber As Int64 = 9999
-    Private Shared ByteSize As Int64 = 1100
+    Private Shared ByteSize As Int64 = 100
 
     Private Shared WriteBytes(ByteSize - 1) As Byte
     Private Shared WriteBytesHash As String
@@ -39,9 +39,9 @@ Public Class WritePerformanceTest
         'Test Multiple Threads
         For Each ThreadNumber In New Integer() {2, 4, 8, 16}
             TestWriteFilesInMultipleThreads(ThreadNumber)
-            Console.ReadLine()
+            'Console.ReadLine()
             TestWriteInMultipleThreads(ThreadNumber, False)
-            Console.ReadLine()
+            'Console.ReadLine()
             TestWriteInMultipleThreads(ThreadNumber, True)
             Console.ReadLine()
         Next
