@@ -3,16 +3,16 @@ Imports System.IO
 Imports System.Security.AccessControl
 Imports System.Threading
 
-Module Program
+Module Main
 
     Sub Main(args As String())
 
         'Execute Test
         Select Case 1
             Case 1
-                TestWrite.Start()
+                WritePerformanceTest.Start()
             Case 2
-                TestRead.Start()
+                ReadPerformanceTest.Start()
             Case 3
                 TestOthers.Start()
 
@@ -22,12 +22,5 @@ Module Program
         Console.WriteLine("Press any key to exit.")
         Console.ReadLine()
     End Sub
-
-
-
-
-
-
-
 
 End Module

@@ -1,4 +1,6 @@
-﻿Public Class TestOthers
+﻿Imports FairyDatabase
+
+Public Class TestOthers
 
     Public Shared Sub Start()
 

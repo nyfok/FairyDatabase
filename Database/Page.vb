@@ -176,7 +176,9 @@ Public Class Page
         Dim FBytes As Byte() = BitConverter.GetBytes(Length)
         FStream.Write(FBytes)
 
-        Console.WriteLine("Write Length to File: " & Length)
+        If Config.IfDebugMode Then
+            Console.WriteLine("Write Length to File: " & Length)
+        End If
     End Sub
 
 
@@ -206,7 +208,7 @@ Public Class Page
         WriteLengthToMemory(Length)
         'Console.WriteLine("Write Length to Memory: " & Length)
 
-        'Flush to File each 3 seconds
+        'Flush to File after 1 second
         If UpdateLengthToFileTimer Is Nothing Then
             Dim FTimerCallback As TimerCallback = AddressOf UpdateLengthToFile
             UpdateLengthToFileTimer = New Timer(FTimerCallback, Nothing, 1000, -1)

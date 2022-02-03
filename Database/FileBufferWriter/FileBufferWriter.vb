@@ -96,58 +96,73 @@ Public Class FileBufferWriter
             'Console.WriteLine("Write Position A: " & Position & ", Write Length: " & Bytes.Count)
             Return
         End If
-        SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
-        If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Check AllBufferLength. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
-        StartTime = Now
+        If Config.IfDebugMode Then
+            SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
+            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Check AllBufferLength. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
+            StartTime = Now
+        End If
 
         'Check If Exists Buffer
         Dim ExistsBuffer As FileBuffer = GetExistsBuffer(Position)
-        SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
-        If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Check Exists Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
-        StartTime = Now
+        If Config.IfDebugMode Then
+            SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
+            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Check Exists Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
+            StartTime = Now
+        End If
+
 
         If ExistsBuffer IsNot Nothing Then
             ExistsBuffer.Write(FStream, Position, Bytes)
             Return
         End If
-        SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
-        If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": ExistsBuffer Write Bytes. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
-        StartTime = Now
+        If Config.IfDebugMode Then
+            SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
+            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": ExistsBuffer Write Bytes. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
+            StartTime = Now
+        End If
+
 
         'No Exists Buffer, create a new one
         SyncLock CreateNewBufferLock
-            SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
-            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Wait CreateNewBufferLock. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
-            StartTime = Now
+            If Config.IfDebugMode Then
+                SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
+                If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Wait CreateNewBufferLock. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
+                StartTime = Now
+            End If
 
             'Check If Exists Buffer
             ExistsBuffer = GetExistsBuffer(Position)
-            SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
-            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Check Exists Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
-            StartTime = Now
+            If Config.IfDebugMode Then
+                SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
+                If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Check Exists Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
+                StartTime = Now
+            End If
 
             If ExistsBuffer IsNot Nothing Then
                 ExistsBuffer.Write(FStream, Position, Bytes)
                 Return
             End If
-            SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
-            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": ExistsBuffer Write Bytes.(StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
-            StartTime = Now
+            If Config.IfDebugMode Then
+                SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
+                If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": ExistsBuffer Write Bytes.(StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
+                StartTime = Now
+            End If
 
             'Create New Buffer
             Dim FBuffer As New FileBuffer(FilePath, Me, FlushMSeconds, Position, Bytes)
             AddBuffer(FBuffer)
-            SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
-            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Create new Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
 
-            If Position < 300100 Then
-                CreateNewCount_Index = CreateNewCount_Index + 1
-            Else
-                CreateNewCount_Block = CreateNewCount_Block + 1
+            If Config.IfDebugMode Then
+                SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
+                If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Create new Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
+
+                If Position < Config.DataPageHeaderSize Then
+                    CreateNewCount_Index = CreateNewCount_Index + 1
+                Else
+                    CreateNewCount_Block = CreateNewCount_Block + 1
+                End If
             End If
-            If CreateNewCount_Index + CreateNewCount_Block > 8500 Then
-                'Console.WriteLine(Now.ToString & ": CreateNewCount_Index=" & CreateNewCount_Index & ", CreateNewCount_Block=" & CreateNewCount_Block)
-            End If
+
         End SyncLock
 
     End Sub

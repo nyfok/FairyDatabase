@@ -1,4 +1,5 @@
-﻿Public Class TestRead
+﻿Imports FairyDatabase
+Public Class ReadPerformanceTest
 
     Private Shared ReadNumber As Int64 = 100
     Private Shared SpaceSize As Int64 = 500
@@ -7,6 +8,9 @@
     Private Shared TestReadBytes(ByteSize - 1) As Byte
 
     Public Shared Sub Start()
+        'Init FairyDatabase Config
+        FairyDatabase.Config.Init(,, False)
+
         'Prepare Read Data
         Clear()    'force clear first
         PrepareReadData()

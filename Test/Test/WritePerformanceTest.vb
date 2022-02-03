@@ -1,12 +1,20 @@
-﻿Public Class TestWrite
+﻿Imports FairyDatabase
+
+Public Class WritePerformanceTest
 
     Private Shared WriteNumber As Int64 = 9999
-    Private Shared ByteSize As Int64 = 10
+    Private Shared ByteSize As Int64 = 1100
 
     Private Shared WriteBytes(ByteSize - 1) As Byte
     Private Shared WriteBytesHash As String
 
+    Private Shared IfVerifyData As Boolean = False
+
     Public Shared Sub Start()
+        'Init FairyDatabase Config
+        FairyDatabase.Config.Init(, 2 * 1024 * 1024, True)
+        FairyDatabase.Config.IfDebugMode = False
+
         'Generate WriteBytes
         Randomize()
         For I = 0 To ByteSize - 1
@@ -19,28 +27,161 @@
         PrepareRandomIDs()
 
         'Test Single Thread
-        For TestNumber = 1 To 50
-            'TestWriteInSingleThread(False)
+        For TestNumber = 1 To 2
+            TestWriteFilesInSingleThread()
+            'Console.ReadLine()
+            TestWriteInSingleThread(False)
             'Console.ReadLine()
             TestWriteInSingleThread(True)
             Console.ReadLine()
         Next
 
         'Test Multiple Threads
-        For ThreadNumber = 2 To 16
+        For Each ThreadNumber In New Integer() {2, 4, 8, 16}
+            TestWriteFilesInMultipleThreads(ThreadNumber)
+            Console.ReadLine()
             TestWriteInMultipleThreads(ThreadNumber, False)
             Console.ReadLine()
-            'TestWriteInMultipleThreads(ThreadNumber, True)
-            'Console.ReadLine()
+            TestWriteInMultipleThreads(ThreadNumber, True)
+            Console.ReadLine()
         Next
     End Sub
 
+#Region "Test Write to Files"
 
-#Region "Test Write"
+    Private Shared Sub TestWriteFilesInSingleThread()
+        'Init Parameters
+        Dim FolderPath As String = "temp\writeperformancetest\"
+        Dim SubFolderPath As String
+        Dim FilePath As String
+
+        'Clear Resources
+        If System.IO.Directory.Exists(FolderPath) Then
+            For Each SubFolderPath In System.IO.Directory.GetDirectories(FolderPath)
+                System.IO.Directory.Delete(SubFolderPath, True)
+            Next
+        Else
+            System.IO.Directory.CreateDirectory(FolderPath)
+        End If
+
+        'Init Parameters
+        CurrentDataID = 0
+        NextDataIDs = New HashSet(Of Int64)
+        NextDataIDs.UnionWith(RandomIDs)
+
+        Dim StartTime As DateTime = Now
+
+        'Exectue
+        Do While True
+            Dim DataID As Int64 = GetNextDataID(False)
+            If DataID <= 0 Then Exit Do
+
+            Dim FData As New Data(DataID, WriteBytes)
+
+            SubFolderPath = FolderPath & Int(DataID / 1000) & "K"
+            If System.IO.Directory.Exists(SubFolderPath) = False Then System.IO.Directory.CreateDirectory(SubFolderPath)
+            FilePath = SubFolderPath & "\" & DataID & ".dat"
+
+            System.IO.File.WriteAllBytes(FilePath, FData.Value)
+
+            'Console.WriteLine("Write " & DataID & " ok.")
+        Loop
+
+        Page.FlushAll()
+
+        'Output Result
+        Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
+        Dim WriteSpeed As Decimal = WriteNumber * WriteBytes.Length / 1024 / 1024 / MSeconds * 1000
+        WriteSpeed = Int(WriteSpeed * 1000) / 1000
+        Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
+        WriteCopySpeed = Int(WriteCopySpeed)
+
+        Console.WriteLine("Write files via single thread using " & MSeconds & "ms. (ByteSize=" & WriteBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+
+    End Sub
+
+
+    Private Shared Sub TestWriteFilesInMultipleThreads(ByVal ThreadNumber As Integer)
+        'Init Parameters
+        Dim FolderPath As String = "temp\writeperformancetest\"
+        Dim SubFolderPath As String
+
+        'Clear Resources
+        If System.IO.Directory.Exists(FolderPath) Then
+            For Each SubFolderPath In System.IO.Directory.GetDirectories(FolderPath)
+                System.IO.Directory.Delete(SubFolderPath, True)
+            Next
+        Else
+            System.IO.Directory.CreateDirectory(FolderPath)
+        End If
+
+        'Init Parameters
+        ReDim ManualResetEvents(ThreadNumber - 1)
+
+        CurrentDataID = 0
+        NextDataIDs = New HashSet(Of Int64)
+        NextDataIDs.UnionWith(RandomIDs)
+
+        Dim StartTime As DateTime = Now
+
+        'Execute
+        For ThreadID = 1 To ThreadNumber
+            ManualResetEvents(ThreadID - 1) = New Threading.ManualResetEvent(False)
+
+            System.Threading.ThreadPool.QueueUserWorkItem(New System.Threading.WaitCallback(AddressOf TestWriteFilesInMultipleThreadsDO), ThreadID)
+        Next
+
+        For ThreadID = 1 To ThreadNumber
+            ManualResetEvents(ThreadID - 1).WaitOne()
+        Next
+
+        Page.FlushAll()
+
+        'Output Result
+        Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
+        Dim WriteSpeed As Decimal = WriteNumber * WriteBytes.Length / 1024 / 1024 / MSeconds * 1000
+        WriteSpeed = Int(WriteSpeed * 1000) / 1000
+        Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
+        WriteCopySpeed = Int(WriteCopySpeed)
+
+        Console.WriteLine("Write files via " & ThreadNumber & " threads using " & MSeconds & "ms. (ByteSize=" & WriteBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+
+    End Sub
+
+    Private Shared Sub TestWriteFilesInMultipleThreadsDO(ByVal ThreadID As Integer)
+        'Init Parameters
+        Dim FolderPath As String = "temp\writeperformancetest\"
+        Dim SubFolderPath As String
+        Dim FilePath As String
+
+        'Execute
+        Do While True
+            Dim DataID As Int64 = GetNextDataID(False)
+            If DataID <= 0 Then Exit Do
+
+            Dim FData As New Data(DataID, WriteBytes)
+
+            SubFolderPath = FolderPath & Int(DataID / 1000) & "K"
+            If System.IO.Directory.Exists(SubFolderPath) = False Then System.IO.Directory.CreateDirectory(SubFolderPath)
+            FilePath = SubFolderPath & "\" & DataID & ".dat"
+
+            System.IO.File.WriteAllBytes(FilePath, FData.Value)
+
+            'Console.WriteLine("(" & ThreadID & ") Write " & DataID & " ok.")
+        Loop
+
+        'Set Signal
+        ManualResetEvents(ThreadID - 1).Set()
+    End Sub
+
+
+#End Region
+
+#Region "Test Write to DB"
+
     Private Shared Sub TestWriteInSingleThread(ByVal IfRandomRead As Boolean)
         'Clear Resources
         Clear()
-        Console.WriteLine("Related resource cleared.")
 
         'Init Parameters
         CurrentDataID = 0
@@ -82,8 +223,10 @@
             Console.WriteLine(Now.ToString & ": CreateNewCount_Index=" & FWriter.CreateNewCount_Index & ", CreateNewCount_Block=" & FWriter.CreateNewCount_Block)
         End If
 
-        PrintFileLength()
-        CheckDataCorrectRate()
+        If IfVerifyData Then
+            PrintFileLength()
+            CheckDataCorrectRate()
+        End If
     End Sub
 
     Private Shared ManualResetEvents As Threading.ManualResetEvent()
@@ -92,7 +235,6 @@
     Private Shared Sub TestWriteInMultipleThreads(ByVal ThreadNumber As Integer, ByVal IfRandomRead As Boolean)
         'Clear Resources
         Clear()
-        Console.WriteLine("Related resource cleared.")
 
         'Init Parameters
         ReDim ManualResetEvents(ThreadNumber - 1)
@@ -132,8 +274,10 @@
         End If
         Console.WriteLine(WriteWayString & " write via " & ThreadNumber & " threads using " & MSeconds & "ms. (ByteSize=" & WriteBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
 
-        PrintFileLength()
-        CheckDataCorrectRate()
+        If IfVerifyData Then
+            PrintFileLength()
+            CheckDataCorrectRate()
+        End If
     End Sub
 
     Private Shared Sub TestWriteInMultipleThreadsDO(ByVal ThreadID As Integer)
@@ -270,6 +414,8 @@
         End If
 
         Page.Pages = New Concurrent.ConcurrentDictionary(Of Int64, Page)
+
+        'Console.WriteLine("Related resource cleared.")
     End Sub
 
 #End Region

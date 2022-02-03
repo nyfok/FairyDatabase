@@ -61,7 +61,7 @@ Public Class FileBuffer
             FStream.Position = Position
             FStream.Write(Bytes, 0, Bytes.Count)
 
-            Console.WriteLine(Now.ToString & ": Write Position B: " & Position & ", Write Length: " & Bytes.Count)
+            'Console.WriteLine(Now.ToString & ": Write Position B: " & Position & ", Write Length: " & Bytes.Count)
             Return
         End If
 
@@ -74,7 +74,7 @@ Public Class FileBuffer
                 FStream.Position = Position
                 FStream.Write(Bytes, 0, Bytes.Count)
 
-                Console.WriteLine(Now.ToString & ": Write Position C: " & Position & ", Write Length: " & Bytes.Count)
+                'Console.WriteLine(Now.ToString & ": Write Position C: " & Position & ", Write Length: " & Bytes.Count)
                 Return
             Else
                 'Not in flush process, still waiting to be flush
