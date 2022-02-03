@@ -14,7 +14,7 @@
     Public Const DataPageHeaderSize As Int64 = DataPageHeaderMetaSize + DataPageHeaderDataIndexSize * DataPageSize  'Data page header size
 
     Public Const SupportWriteBuffer As Boolean = True   'If True => Write to disk after WriteBufferFlushMSeconds or buffer size >= PageWriteBufferSize. If False => Write immediately.
-    Public Const WriteBufferFlushMSeconds As Integer = 6000
+    Public Const WriteBufferFlushMSeconds As Integer = 500
     Public Const DataPageWriteBufferSize As Int64 = 100 * 1024 '100K Bytes
 
 End Class

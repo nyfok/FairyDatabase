@@ -7,7 +7,7 @@ Public Class FileBufferWriter
     Private MaxBufferSize As Int64
     Private FlushMSeconds As Integer
 
-    Private Const MaxBuffersNumber As Integer = 16000
+    Private Const MaxBuffersNumber As Integer = 16
 
     Public Sub New(ByVal FilePath As String, ByVal MaxBufferSize As Int64, ByVal FlushMSeconds As Integer)
         Me.FilePath = FilePath
@@ -17,43 +17,49 @@ Public Class FileBufferWriter
 
 #Region "Buffers Pool"
 
-    Public Buffers As New HashSet(Of FileBuffer)
+    Public Buffers As New HashSet(Of FileBuffer) 'Key=StartPosition
     Private BuffersLock As New Object
 
     Public ReadOnly Property AllBufferLength As Int64
         Get
-            Dim Length As Int64 = 0
+            'Dim Length As Int64 = 0
 
-            For Index = 0 To Buffers.Count - 1
-                SyncLock BuffersLock
-                    If Index >= Buffers.Count Then Exit For
+            'For Index = 0 To Buffers.Count - 1
+            '    Dim Buffer As FileBuffer
+            '    SyncLock BuffersLock
+            '        If Index >= Buffers.Count Then Exit For
+            '        Buffer = Buffers.ElementAt(Index)
+            '    End SyncLock
 
-                    Dim Buffer As FileBuffer = Buffers.ElementAt(Index)
-                    If Buffer Is Nothing Then Exit For
-                    Length = Length + Buffer.Length
-                End SyncLock
-            Next
+            '    If Buffer Is Nothing Then Exit For
+            '    Length = Length + Buffer.Length
+            'Next
 
-            Return Length
+            'Return Length
+            SyncLock BuffersLock
+                Dim Length = Aggregate Buffer In Buffers Into Sum(Buffer.Length)
+                Return Length
+            End SyncLock
         End Get
     End Property
 
     Private Function GetExistsBuffer(ByVal Position As Int64) As FileBuffer
-        For Index As Integer = 0 To Buffers.Count - 1
-            SyncLock BuffersLock
-                If Index >= Buffers.Count Then Return Nothing
+        SyncLock BuffersLock
+            Dim Items = From Buffer In Buffers Where Position >= Buffer.StartPosition AndAlso Position <= (Buffer.EndPosition + 1)
+            If Items IsNot Nothing AndAlso Items.Count > 0 Then
+                Return Items(0)
+            End If
 
-                Dim FBuffer As FileBuffer = Buffers.ElementAt(Index)
-                If FBuffer IsNot Nothing Then
-                    If Position >= FBuffer.StartPosition AndAlso Position <= (FBuffer.EndPosition + 1) Then
-                        Return FBuffer
-                    End If
-                End If
-            End SyncLock
-        Next
-
-        Return Nothing
+            Return Nothing
+        End SyncLock
     End Function
+
+    Private AddBufferLock As New Object
+    Private Sub AddBuffer(ByRef Buffer As FileBuffer)
+        SyncLock BuffersLock
+            Buffers.Add(Buffer)
+        End SyncLock
+    End Sub
 
     Public Sub RemoveBuffer(ByRef Buffer As FileBuffer)
         If Buffers.Contains(Buffer) = False Then Return
@@ -68,6 +74,9 @@ Public Class FileBufferWriter
 #Region "Write"
 
     Private CreateNewBufferLock As New Object
+
+    Public CreateNewCount_Index As Integer = 0
+    Public CreateNewCount_Block As Integer = 0
 
     Public Sub Write(ByRef FStream As FileStream, ByVal Position As Int64, ByVal Bytes As Byte())
         'Console.WriteLine(Now.ToString & ": Write Start: " & Position & ", End: " & Position + Bytes.Count - 1)
@@ -102,7 +111,7 @@ Public Class FileBufferWriter
             Return
         End If
         SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
-        If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": ExistsBuffer Write Bytes. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
+        If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": ExistsBuffer Write Bytes. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
         StartTime = Now
 
         'No Exists Buffer, create a new one
@@ -113,20 +122,32 @@ Public Class FileBufferWriter
 
             'Check If Exists Buffer
             ExistsBuffer = GetExistsBuffer(Position)
+            SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
+            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Check Exists Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
+            StartTime = Now
 
             If ExistsBuffer IsNot Nothing Then
                 ExistsBuffer.Write(FStream, Position, Bytes)
                 Return
             End If
             SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
-            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Check Exists Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
+            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": ExistsBuffer Write Bytes.(StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
             StartTime = Now
 
             'Create New Buffer
             Dim FBuffer As New FileBuffer(FilePath, Me, FlushMSeconds, Position, Bytes)
-            Buffers.Add(FBuffer)
+            AddBuffer(FBuffer)
             SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
-            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Create new Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, TotalBuffers.Length=" & Buffers.Count)
+            If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Create new Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
+
+            If Position < 300100 Then
+                CreateNewCount_Index = CreateNewCount_Index + 1
+            Else
+                CreateNewCount_Block = CreateNewCount_Block + 1
+            End If
+            If CreateNewCount_Index + CreateNewCount_Block > 8500 Then
+                'Console.WriteLine(Now.ToString & ": CreateNewCount_Index=" & CreateNewCount_Index & ", CreateNewCount_Block=" & CreateNewCount_Block)
+            End If
         End SyncLock
 
     End Sub
@@ -136,7 +157,7 @@ Public Class FileBufferWriter
 
 #Region "Flush"
 
-    Private Sub Flush()
+    Public Sub Flush()
         Do While Buffers.Count > 0
             Try
                 Dim Buffer As FileBuffer = Buffers.First

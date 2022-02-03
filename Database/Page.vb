@@ -493,13 +493,10 @@ Public Class Page
         'Flush PageFileBufferWriter
         If PageFileBufferWriter IsNot Nothing Then
             Try
-                PageFileBufferWriter.Dispose()
-                PageFileBufferWriter = Nothing
+                PageFileBufferWriter.Flush()
             Catch ex As Exception
             End Try
         End If
-
-
     End Sub
 
     Protected Overridable Sub Dispose(disposing As Boolean)
@@ -510,7 +507,18 @@ Public Class Page
 
             ' TODO: 释放未托管的资源(未托管的对象)并重写终结器
             ' TODO: 将大型字段设置为 null
+
+            'Flush
             Flush()
+
+            'Clear PageFileBufferWriter
+            If PageFileBufferWriter IsNot Nothing Then
+                Try
+                    PageFileBufferWriter.Dispose()
+                    PageFileBufferWriter = Nothing
+                Catch ex As Exception
+                End Try
+            End If
 
             disposedValue = True
         End If

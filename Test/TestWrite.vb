@@ -77,6 +77,11 @@
         End If
         Console.WriteLine(WriteWayString & " write via single thread using " & MSeconds & "ms. (ByteSize=" & WriteBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
 
+        Dim FWriter As FileBufferWriter = Page.GetPage(1).PageFileBufferWriter
+        If FWriter IsNot Nothing Then
+            Console.WriteLine(Now.ToString & ": CreateNewCount_Index=" & FWriter.CreateNewCount_Index & ", CreateNewCount_Block=" & FWriter.CreateNewCount_Block)
+        End If
+
         PrintFileLength()
         CheckDataCorrectRate()
     End Sub
