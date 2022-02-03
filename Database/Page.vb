@@ -10,9 +10,7 @@ Public Class Page
 
     Public PendingRemoveBlocksFilePath As String    'Page File's Pending Remove Data Blocks. StartPOS(8 Bytes)+BlockLength(6 Bytes)
 
-    Public DataIndexBufferWriter As FileBufferWriter
-    Public DataBlockBufferWriter As FileBufferWriter
-
+    Public PageFileBufferWriter As FileBufferWriter
 
     Public Sub New(ByVal ID As Int64)
         Me.ID = ID
@@ -44,8 +42,7 @@ Public Class Page
 
         'Create Buffer Writer if SupportWriteBuffer
         If Config.SupportWriteBuffer Then
-            DataIndexBufferWriter = New FileBufferWriter(FilePath, Config.DataPageWriteBufferSize, Config.WriteBufferFlushMSeconds)
-            DataBlockBufferWriter = New FileBufferWriter(FilePath, Config.DataPageWriteBufferSize, Config.WriteBufferFlushMSeconds)
+            PageFileBufferWriter = New FileBufferWriter(FilePath, Config.DataPageWriteBufferSize, Config.WriteBufferFlushMSeconds)
         End If
     End Sub
 
@@ -370,11 +367,11 @@ Public Class Page
             End If
         Else
             'Write Data Index
-            DataIndexBufferWriter.Write(FStream, GetDataIndexPOS(FData.ID), FData.PageIndexBytesFull)
+            PageFileBufferWriter.Write(FStream, GetDataIndexPOS(FData.ID), FData.PageIndexBytesFull)
 
             'Write Data Block
             If FData.StartPOS > 0 AndAlso FData.Value IsNot Nothing AndAlso FData.Value.Count > 0 Then
-                DataBlockBufferWriter.Write(FStream, FData.StartPOS, FData.Value)
+                PageFileBufferWriter.Write(FStream, FData.StartPOS, FData.Value)
             End If
         End If
 
@@ -493,22 +490,15 @@ Public Class Page
             End Try
         End If
 
-        'Flush DataIndexBufferWriter, DataBlockBufferWriter
-        If DataIndexBufferWriter IsNot Nothing Then
+        'Flush PageFileBufferWriter
+        If PageFileBufferWriter IsNot Nothing Then
             Try
-                DataIndexBufferWriter.Dispose()
-                DataIndexBufferWriter = Nothing
+                PageFileBufferWriter.Dispose()
+                PageFileBufferWriter = Nothing
             Catch ex As Exception
             End Try
         End If
 
-        If DataBlockBufferWriter IsNot Nothing Then
-            Try
-                DataBlockBufferWriter.Dispose()
-                DataBlockBufferWriter = Nothing
-            Catch ex As Exception
-            End Try
-        End If
 
     End Sub
 

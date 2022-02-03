@@ -1,11 +1,11 @@
 ﻿Imports System.IO
 Imports System.Threading
-Public Class FileBufferWriter
+Public Class FileBufferWriterSimple
     Implements IDisposable
 
     Private FilePath As String
-    Private MaxBufferSize As Int64 = 100 * 1024
-    Private FlushMSeconds As Integer = 1000
+    Private MaxBufferSize As Int64
+    Private FlushMSeconds As Integer
 
     Public Sub New(ByVal FilePath As String, ByVal MaxBufferSize As Int64, ByVal FlushMSeconds As Integer)
         Me.FilePath = FilePath
@@ -21,7 +21,6 @@ Public Class FileBufferWriter
     Private Buffer As Byte()
     Private BufferLength As Int64 = 0
     Private NewBufferTime As DateTime  'First time when data add to buffer
-    Private disposedValue As Boolean
 
     Public Sub Write(ByRef FStream As FileStream, ByVal Position As Int64, ByVal Bytes As Byte())
         'Check input
@@ -121,6 +120,7 @@ Public Class FileBufferWriter
         End SyncLock
     End Sub
 
+#Region "Flush"
     Private Sub FlushWithLock()
         'Close FlushTimer
         If FlushTimer IsNot Nothing Then
@@ -165,7 +165,12 @@ Public Class FileBufferWriter
         NewBufferTime = Nothing
     End Sub
 
+#End Region
+
 #Region "Dispose"
+
+    Private disposedValue As Boolean
+
     Protected Overridable Sub Dispose(disposing As Boolean)
         If Not disposedValue Then
             If disposing Then
@@ -176,6 +181,7 @@ Public Class FileBufferWriter
             ' TODO: 将大型字段设置为 null
             disposedValue = True
 
+            'Flush
             Flush()
         End If
     End Sub

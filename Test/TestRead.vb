@@ -5,20 +5,14 @@
     Private Shared ByteSize As Int64 = 1024
 
     Private Shared TestReadBytes(ByteSize - 1) As Byte
-    Private Shared RandomReadIDs As HashSet(Of Int64)
 
     Public Shared Sub Start()
         'Prepare Read Data
         Clear()    'force clear first
         PrepareReadData()
 
-        'Init RandomReadIDs
-        Randomize()
-        RandomReadIDs = New HashSet(Of Int64)
-        Do While RandomReadIDs.Count < ReadNumber
-            Dim ID As Int64 = Int(Rnd() * SpaceSize) + 1
-            If RandomReadIDs.Contains(ID) = False Then RandomReadIDs.Add(ID)
-        Loop
+        'Init RandomIDs
+        PrepareRandomIDs()
 
         'Test Single Thread
         TestReadInSingleThread(False)
@@ -37,47 +31,14 @@
         Next
     End Sub
 
-    Private Shared Sub PrepareReadData()
-        'Check if exists related Resources
-        Dim IfAllPageExists As Boolean = True
-        Dim MaxPageID As Integer = Page.GetPageID(SpaceSize)
-        For PageID = 0 To MaxPageID
-            Dim FilePath As String = Page.GetPageFilePath(PageID)
-            If System.IO.File.Exists(FilePath) = False Then
-                IfAllPageExists = False
-                Exit For
-            End If
-        Next
-        If IfAllPageExists Then
-            Console.WriteLine("Related resource prepared.")
-            Return
-        End If
-
-        'Clear
-        Clear()
-
-        'Exectue
-        For Count = 1 To SpaceSize
-
-            Dim FData As New Data(Count, TestReadBytes)
-            Page.Write(FData)
-
-            Console.WriteLine("Write " & Count & " ok.")
-        Next
-
-        Page.FlushAll()
-
-        'Output Result
-        Console.WriteLine("Related resource prepared.")
-
-    End Sub
+#Region "Test Read"
 
     Private Shared Sub TestReadInSingleThread(ByVal IfRandomRead As Boolean)
 
         'Init Parameters
         CurrentDataID = 0
         NextDataIDs = New HashSet(Of Int64)
-        NextDataIDs.UnionWith(RandomReadIDs)
+        NextDataIDs.UnionWith(RandomIDs)
 
         Dim StartTime As DateTime = Now
 
@@ -116,7 +77,7 @@
 
         CurrentDataID = 0
         NextDataIDs = New HashSet(Of Int64)
-        NextDataIDs.UnionWith(RandomReadIDs)
+        NextDataIDs.UnionWith(RandomIDs)
 
         Dim StartTime As DateTime = Now
 
@@ -165,6 +126,65 @@
         ManualResetEvents(ThreadID - 1).Set()
     End Sub
 
+#End Region
+
+
+#Region "PrepareReadData, RandomIDs, GetNextDataID"
+    Private Shared Sub PrepareReadData()
+        'Check if exists related Resources
+        Dim IfAllPageExists As Boolean = True
+        Dim MaxPageID As Integer = Page.GetPageID(SpaceSize)
+        For PageID = 0 To MaxPageID
+            Dim FilePath As String = Page.GetPageFilePath(PageID)
+            If System.IO.File.Exists(FilePath) = False Then
+                IfAllPageExists = False
+                Exit For
+            End If
+        Next
+        If IfAllPageExists Then
+            Console.WriteLine("Related resource prepared.")
+            Return
+        End If
+
+        'Clear
+        Clear()
+
+        'Exectue
+        For Count = 1 To SpaceSize
+            Dim FData As New Data(Count, TestReadBytes)
+            Page.Write(FData)
+
+            Console.WriteLine("Write " & Count & " ok.")
+        Next
+
+        Page.FlushAll()
+
+        'Output Result
+        Console.WriteLine("Related resource prepared.")
+
+    End Sub
+
+
+    Private Shared RandomIDs As HashSet(Of Int64)
+
+    Private Shared Sub PrepareRandomIDs()
+        Randomize()
+
+        Dim RemainIDs As New HashSet(Of Int64)
+        For I = 1 To SpaceSize
+            RemainIDs.Add(I)
+        Next
+
+        RandomIDs = New HashSet(Of Int64)
+        Do While RandomIDs.Count < ReadNumber
+            Dim Index As Integer = Int(Rnd() * RemainIDs.Count)
+            Dim ID As Int64 = RemainIDs.ElementAt(Index)
+            RandomIDs.Add(ID)
+            RemainIDs.Remove(ID)
+        Loop
+        RemainIDs = Nothing
+    End Sub
+
     Private Shared CurrentDataID As Int64 = 0
     Private Shared GetNextDataIDLock As New Object
     Private Shared NextDataIDs As HashSet(Of Int64)
@@ -187,6 +207,11 @@
             End If
         End SyncLock
     End Function
+
+#End Region
+
+
+#Region "Tools"
 
     Private Shared Sub PrintFileLength()
         For Each PageItem In Page.Pages
@@ -227,5 +252,7 @@
 
         Page.Pages = New Concurrent.ConcurrentDictionary(Of Int64, Page)
     End Sub
+
+#End Region
 
 End Class
