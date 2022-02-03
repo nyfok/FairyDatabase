@@ -206,7 +206,6 @@ Public Class Page
         WriteLengthToMemory(Length)
         'Console.WriteLine("Write Length to Memory: " & Length)
 
-
         'Flush to File each 3 seconds
         If UpdateLengthToFileTimer Is Nothing Then
             Dim FTimerCallback As TimerCallback = AddressOf UpdateLengthToFile
