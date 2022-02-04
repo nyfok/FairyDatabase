@@ -22,7 +22,7 @@ Public Class ReadPerformanceTest
 
         'Prepare Test Data
         'PrepareTestData()
-        Console.WriteLine()
+        'Console.WriteLine()
 
         'Test Single Thread
         For TestNumber = 1 To 2
@@ -404,7 +404,7 @@ Public Class ReadPerformanceTest
             For Each PageItem In Page.Pages
                 If PageItem.Value IsNot Nothing Then
                     Try
-                        PageItem.Value.WriteLengthToMemory(0)
+                        PageItem.Value.ClearPageHeaderMemory()
                         If System.IO.File.Exists(PageItem.Value.FilePath) Then System.IO.File.Delete(PageItem.Value.FilePath)
                         If System.IO.File.Exists(PageItem.Value.PendingRemoveBlocksFilePath) Then System.IO.File.Delete(PageItem.Value.PendingRemoveBlocksFilePath)
                     Catch ex As Exception

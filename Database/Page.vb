@@ -19,11 +19,9 @@ Public Class Page
         FilePath = GetPageFilePath(ID)
         PendingRemoveBlocksFilePath = GetPageRBFilePath(ID)
 
-        'Create LengthMutex
-        LengthMutex = New MutexACL("FDBP" & ID & "Length")
-
-        'Create Page SharedMemory
-        CreateMemory()
+        'Create LengthMutex, PageHeaderMemory
+        LengthMutex = New MutexACL("FDBP" & ID & "HeaderMutex")
+        CreatePageHeaderMemory()
 
         'Check if need to Create PageFile
         If File.Exists(FilePath) Then
@@ -35,7 +33,7 @@ Public Class Page
         End If
 
         'Check if need to Create PendingRemoveBlocksFile
-        RemoveBlocksFileMutex = New MutexACL("FDBPRB" & ID & "Operate")
+        RemoveBlocksFileMutex = New MutexACL("FDBP" & ID & "RBMutex")
         If File.Exists(PendingRemoveBlocksFilePath) = False Then
             CreatePendingRemoveBlocksFile()
         End If
@@ -46,11 +44,10 @@ Public Class Page
         End If
     End Sub
 
-
 #Region "FileReated: CreatePageFile, FileLength"
 
     Public Sub CreatePageFile()
-        Dim FMutexACL As New MutexACL("FDBP" & ID & "Operate")
+        Dim FMutexACL As New MutexACL("FDBP" & ID & "Mutex")
         FMutexACL.WaitOne()
 
         If File.Exists(FilePath) Then Return
@@ -66,8 +63,13 @@ Public Class Page
         FStream.Close()
         FStream.Dispose()
 
-        WriteLengthToMemory(Config.DataPageHeaderSize)
-        WriteLengthToFile(Config.DataPageHeaderSize)
+        If Config.SupportPageHeaderBuffer Then
+            WriteLengthToFile(Config.DataPageHeaderSize)
+            WriteToHeaderMemory(ReadFromHeaderFile)
+        Else
+            WriteLengthToMemory(Config.DataPageHeaderSize)
+            WriteLengthToFile(Config.DataPageHeaderSize)
+        End If
 
         FMutexACL.Release()
     End Sub
@@ -108,81 +110,97 @@ Public Class Page
         End Get
     End Property
 
+
 #End Region
 
-#Region "Length: Real Data Length"
-    ' Real Data Length of this Page file, Store in Memory
+#Region "FileStreams"
 
-    Public LengthMutex As MutexACL
+    Private FileStreams As New HashSet(Of FileStream)
+    Private FileStreamsLock As New Object
+    Private FileStreamsStack As New Concurrent.ConcurrentStack(Of FileStream)
 
-    Public Function ReadLengthFromMemory() As Int64
-        Dim FBytes As Byte() = Memory.Read(0, 8)
-        Return BitConverter.ToInt64(FBytes)
+    Private Function GetOneFileStream() As FileStream
+        SyncLock FileStreamsLock
+            Dim FStream As FileStream
+            Do While FileStreamsStack.Count > 0
+                FileStreamsStack.TryPop(FStream)
+                If FStream Is Nothing Then
+                    If FileStreams.Contains(FStream) Then FileStreams.Remove(FStream)
+                Else
+                    Return FStream
+                End If
+            Loop
+
+            Dim NewFileStream As FileStream = File.Open(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+            FileStreams.Add(NewFileStream)
+
+            Console.WriteLine("FileStreams.Count: " & FileStreams.Count)
+
+            Return NewFileStream
+        End SyncLock
     End Function
 
-    Public Sub WriteLengthToMemory(ByVal Length As Int64)
-        Dim FBytes As Byte() = BitConverter.GetBytes(Length)
-        Memory.Write(FBytes, 0, 0, FBytes.Length)
+    Private Sub ReturnOneFileStream(ByRef FStream As FileStream)
+        If FStream Is Nothing Then Return
+        SyncLock FileStreamsLock
+            FileStreamsStack.Push(FStream)
+        End SyncLock
     End Sub
 
-    Public Function ReadLengthFromFile() As Int64
-        'Generate FStream
-        Dim FStream As FileStream = File.Open(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+    Private Sub DestoryOneFileStream(ByRef FStream As FileStream)
+        If FStream Is Nothing Then Return
 
-        'Get FileLength
-        Dim FileLength As Int64 = ReadLengthFromFile(FStream)
+        SyncLock FileStreamsLock
+            If FileStreams.Contains(FStream) Then
+                FileStreams.Remove(FStream)
+            End If
+        End SyncLock
 
-        'Close FStream
-        FStream.Close()
-        FStream.Dispose()
-
-        'Return value
-        Return FileLength
-    End Function
-
-    Public Function ReadLengthFromFile(ByVal FStream As FileStream) As Int64
-        'Seek
-        FStream.Position = 0
-
-        'Read
-        Dim FBytes(7) As Byte
-        FStream.Read(FBytes, 0, 8)
-
-        'Get Length
-        Dim Length As Int64 = BitConverter.ToInt64(FBytes)
-
-        'Return value
-        Return Length
-    End Function
-
-    Public Sub WriteLengthToFile(ByVal Length As Int64)
-        'Generate FStream
-        Dim FStream As FileStream = File.Open(FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
-
-        'Write
-        WriteLengthToFile(FStream, Length)
-
-        'Close FStream
         FStream.Flush()
         FStream.Close()
         FStream.Dispose()
+
+        FStream = Nothing
     End Sub
 
-    Public Sub WriteLengthToFile(ByVal FStream As FileStream, ByVal Length As Int64)
-        'Seek
-        FStream.Position = 0
+    Private Sub FlushAllFileStreams()
+        For I = 0 To FileStreams.Count - 1 Step 1
+            If I >= FileStreams.Count Then Exit For
 
-        'Write
-        Dim FBytes As Byte() = BitConverter.GetBytes(Length)
-        FStream.Write(FBytes)
-
-        If Config.IfDebugMode Then
-            Console.WriteLine("Write Length to File: " & Length)
-        End If
+            Try
+                Dim FStream As FileStream = FileStreams.ElementAt(I)
+                FStream.Flush()
+            Catch ex As Exception
+            End Try
+        Next
     End Sub
 
+    Private Sub DestoryAllFileStreams()
+        Do While FileStreams.Count > 0
+            Try
+                Dim FStream As FileStream = FileStreams.First
+                FileStreams.Remove(FStream)
 
-#Region "Add Length"
+                If FStream IsNot Nothing Then
+                    FStream.Flush()
+                    FStream.Close()
+                    FStream.Dispose()
+
+                    FStream = Nothing
+                End If
+            Catch ex As Exception
+            End Try
+        Loop
+
+        FileStreamsStack.Clear()
+    End Sub
+
+#End Region
+
+#Region "Length: Real Data Length"
+    'Real Data Length of this Page file, Store in Memory
+
+    Public LengthMutex As MutexACL
 
     ''' <summary>
     ''' Will Return the StartPOS. If -1, means do not write data block
@@ -208,10 +226,15 @@ Public Class Page
         WriteLengthToMemory(Length)
         'Console.WriteLine("Write Length to Memory: " & Length)
 
-        'Flush to File after 1 second
-        If UpdateLengthToFileTimer Is Nothing Then
-            Dim FTimerCallback As TimerCallback = AddressOf UpdateLengthToFile
-            UpdateLengthToFileTimer = New Timer(FTimerCallback, Nothing, 1000, -1)
+        'Flush to File 
+        If UpdateHeaderToFileTimer Is Nothing Then
+            If Config.SupportPageHeaderBuffer Then
+                Dim FTimerCallback As TimerCallback = AddressOf FlushHeaderToFile
+                UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, Config.PageHeaderBufferFlushMSeconds, -1)
+            Else
+                Dim FTimerCallback As TimerCallback = AddressOf UpdateLengthToFile
+                UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, Config.PageLengthFlushMSeconds, -1)
+            End If
         End If
 
         'Release Sign
@@ -221,16 +244,14 @@ Public Class Page
         Return StartPOS
     End Function
 
-    Private UpdateLengthToFileTimer As Timer = Nothing
-
     Private Sub UpdateLengthToFile()
-        'Clear UpdateLengthToFileTimer
-        If UpdateLengthToFileTimer IsNot Nothing Then
+        'Clear UpdateHeaderToFileTimer
+        If UpdateHeaderToFileTimer IsNot Nothing Then
             Try
-                UpdateLengthToFileTimer.Dispose()
+                UpdateHeaderToFileTimer.Dispose()
             Catch ex As Exception
             Finally
-                UpdateLengthToFileTimer = Nothing
+                UpdateHeaderToFileTimer = Nothing
             End Try
         End If
 
@@ -238,34 +259,245 @@ Public Class Page
         WriteLengthToFile(ReadLengthFromMemory())
     End Sub
 
-#End Region
+
+#Region "Length Basic Functions"
+    Private Function ReadLengthFromMemory() As Int64
+        Dim FBytes As Byte() = PageHeaderMemory.Read(0, 8)
+        Return BitConverter.ToInt64(FBytes)
+    End Function
+
+    Private Sub WriteLengthToMemory(ByVal Length As Int64)
+        Dim FBytes As Byte() = BitConverter.GetBytes(Length)
+        PageHeaderMemory.Write(FBytes, 0, 0, FBytes.Length)
+    End Sub
+
+    Private Function ReadLengthFromFile() As Int64
+        'Generate FStream
+        Dim FStream As FileStream = File.Open(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+
+        'Get FileLength
+        Dim FileLength As Int64 = ReadLengthFromFile(FStream)
+
+        'Close FStream
+        FStream.Close()
+        FStream.Dispose()
+
+        'Return value
+        Return FileLength
+    End Function
+
+    Private Function ReadLengthFromFile(ByVal FStream As FileStream) As Int64
+        'Seek
+        FStream.Position = 0
+
+        'Read
+        Dim FBytes(7) As Byte
+        FStream.Read(FBytes, 0, 8)
+
+        'Get Length
+        Dim Length As Int64 = BitConverter.ToInt64(FBytes)
+
+        'Return value
+        Return Length
+    End Function
+
+    Private Sub WriteLengthToFile(ByVal Length As Int64)
+        'Generate FStream
+        Dim FStream As FileStream = File.Open(FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
+
+        'Write
+        WriteLengthToFile(FStream, Length)
+
+        'Close FStream
+        FStream.Flush()
+        FStream.Close()
+        FStream.Dispose()
+    End Sub
+
+    Private Sub WriteLengthToFile(ByVal FStream As FileStream, ByVal Length As Int64)
+        'Seek
+        FStream.Position = 0
+
+        'Write
+        Dim FBytes As Byte() = BitConverter.GetBytes(Length)
+        FStream.Write(FBytes)
+
+        If Config.IfDebugMode Then
+            Console.WriteLine("Write Length to File: " & Length)
+        End If
+    End Sub
 
 #End Region
 
-#Region "Page Shared Memory"
+#End Region
+
+#Region "Page Header"
+
+    Private UpdateHeaderToFileTimer As Timer = Nothing
+
+    Private Sub FlushHeaderToFile()
+        'Clear UpdateHeaderToFileTimer
+        If UpdateHeaderToFileTimer IsNot Nothing Then
+            Try
+                UpdateHeaderToFileTimer.Dispose()
+            Catch ex As Exception
+            Finally
+                UpdateHeaderToFileTimer = Nothing
+            End Try
+        End If
+
+        'Execute
+        WriteToHeaderFile(ReadFromHeaderMemory())
+    End Sub
+
+#Region "Page Header Memory"
 
     ''' <summary>
     ''' First 8 Bytes: Length
     ''' </summary>
-    Private Memory As SharedMemory
-    Private disposedValue As Boolean
+    Private PageHeaderMemory As SharedMemory
 
-    Private Sub CreateMemory()
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="Bytes"></param>
+    ''' <param name="Position"></param>
+    Private Sub WriteToHeader(ByVal Bytes() As Byte, Optional ByVal Position As Int64 = 0)
+        'Check Position
+        'Do not write the Meta Area
+        If Position < Config.DataPageHeaderMetaSize Then Return
+
+        'Write to Memory
+        PageHeaderMemory.Write(Bytes, Position)
+
+        'Flush to File 
+        If UpdateHeaderToFileTimer Is Nothing Then
+            Dim FTimerCallback As TimerCallback = AddressOf FlushHeaderToFile
+            UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, Config.PageHeaderBufferFlushMSeconds, -1)
+        End If
+    End Sub
+
+    Private Sub CreatePageHeaderMemory()
         'Create Memory
-        Dim MemorySize As Int64 = 8
+        Dim MemorySize As Int64
+        If Config.SupportPageHeaderBuffer Then
+            MemorySize = Config.DataPageHeaderSize
+        Else
+            MemorySize = 8
+        End If
+
         Dim IfNewCreate As Boolean = False
-        Memory = New SharedMemory("FDBP" & ID, MemorySize, IfNewCreate)
+        PageHeaderMemory = New SharedMemory("FDBP" & ID, MemorySize, IfNewCreate)
 
         'Init Length
         If IfNewCreate Then
             LengthMutex.WaitOne()
+
             If File.Exists(FilePath) Then
-                Dim Length As Int64 = ReadLengthFromFile()
-                WriteLengthToMemory(Length)
+                If Config.SupportPageHeaderBuffer Then
+                    Dim HeaderBytes As Byte() = ReadFromHeaderFile()
+                    WriteToHeaderMemory(HeaderBytes)
+                Else
+                    Dim Length As Int64 = ReadLengthFromFile()
+                    WriteLengthToMemory(Length)
+                End If
             End If
+
             LengthMutex.Release()
         End If
     End Sub
+
+    Public Sub ClearPageHeaderMemory()
+        Dim FBytes(PageHeaderMemory.Size - 1) As Byte
+        PageHeaderMemory.Write(FBytes)
+    End Sub
+
+#End Region
+
+#Region "PageHeader Basic Functions"
+    Private Function ReadFromHeaderMemory(Optional ByVal Position As Int64 = 0, Optional ByVal Length As Int64 = 0) As Byte()
+        'Check input
+        If Position < 0 OrElse Position >= PageHeaderMemory.Size OrElse Length < 0 Then Return Nothing
+        Dim MaxRemainLength As Int64 = PageHeaderMemory.Size - Position
+        If Length = 0 Then
+            Length = MaxRemainLength
+        ElseIf Length > MaxRemainLength Then
+            Length = MaxRemainLength
+        End If
+
+        'Read Bytes
+        Dim Bytes As Byte() = PageHeaderMemory.Read(Position, Length)
+
+        'Return Value
+        Return Bytes
+    End Function
+
+    Private Sub WriteToHeaderMemory(ByVal Bytes() As Byte, Optional ByVal Position As Int64 = 0)
+        PageHeaderMemory.Write(Bytes, Position)
+    End Sub
+
+    Private Function ReadFromHeaderFile(Optional ByVal Position As Int64 = 0, Optional ByVal Length As Int64 = 0) As Byte()
+        'Generate FStream
+        Dim FStream As FileStream = File.Open(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+
+        'Read HeaderBytes
+        Dim HeadBytes() As Byte = ReadFromHeaderFile(FStream, Position, Length)
+
+        'Close FStream
+        FStream.Close()
+        FStream.Dispose()
+
+        'Return value
+        Return HeadBytes
+    End Function
+
+    Private Function ReadFromHeaderFile(ByVal FStream As FileStream, Optional ByVal Position As Int64 = 0, Optional ByVal Length As Int64 = 0) As Byte()
+        'Check input
+        If Position < 0 OrElse Position >= PageHeaderMemory.Size OrElse Length < 0 Then Return Nothing
+        Dim MaxRemainLength As Int64 = PageHeaderMemory.Size - Position
+        If Length = 0 Then
+            Length = MaxRemainLength
+        ElseIf Length > MaxRemainLength Then
+            Length = MaxRemainLength
+        End If
+
+        'Seek
+        FStream.Position = Position
+
+        'Read
+        Dim Bytes(Length - 1) As Byte
+        FStream.Read(Bytes, 0, Length)
+
+        'Return value
+        Return Bytes
+    End Function
+
+    Private Sub WriteToHeaderFile(ByVal Bytes As Byte(), Optional ByVal Position As Int64 = 0)
+        'Generate FStream
+        Dim FStream As FileStream = File.Open(FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
+
+        'Write
+        WriteToHeaderFile(FStream, Bytes, Position)
+
+        'Close FStream
+        FStream.Flush()
+        FStream.Close()
+        FStream.Dispose()
+    End Sub
+
+    Private Sub WriteToHeaderFile(ByVal FStream As FileStream, ByVal Bytes As Byte(), Optional ByVal Position As Int64 = 0)
+        'Seek
+        FStream.Position = Position
+
+        'Write
+        FStream.Write(Bytes)
+
+        If Config.IfDebugMode Then
+            Console.WriteLine("Write Header to File.")
+        End If
+    End Sub
+
+#End Region
 
 #End Region
 
@@ -300,7 +532,14 @@ Public Class Page
 
         'Check if re-use the current section
         Dim IfReUseBlock As Boolean = False
-        Dim CurrentDataIndex As Byte() = ReadDataIndex(FStream, FData.ID)
+
+        Dim CurrentDataIndex As Byte()
+        If Config.SupportPageHeaderBuffer Then
+            CurrentDataIndex = ReadFromHeaderMemory(GetDataIndexPOS(FData.ID), Config.DataPageHeaderDataIndexSize)
+        Else
+            CurrentDataIndex = ReadDataIndex(FStream, FData.ID)
+        End If
+
         Dim CurrentData As New Data
         CurrentData.PageIndexBytes = CurrentDataIndex
 
@@ -352,25 +591,30 @@ Public Class Page
             End If
         End If
 
+        'Write Data Index
+        If Config.SupportPageHeaderBuffer Then
+            WriteToHeader(FData.PageIndexBytes, GetDataIndexPOS(FData.ID))
+        Else
+            'Write based on SupportWriteBuffer settings
+            If Config.SupportWriteBuffer = False Then
+                'Support Multiple Thread Write
+                FStream.Position = GetDataIndexPOS(FData.ID)
+                Dim PageIndexBytes As Byte() = FData.PageIndexBytes
+                FStream.Write(PageIndexBytes, 0, PageIndexBytes.Count)
+            Else
+                PageFileBufferWriter.Write(FStream, GetDataIndexPOS(FData.ID), FData.PageIndexBytesFull)
+            End If
+        End If
+
+        'Write Data Block
         'Write based on SupportWriteBuffer settings
         If Config.SupportWriteBuffer = False Then
-            'Write Data Index
-            'Support Multiple Thread Write
-            FStream.Position = GetDataIndexPOS(FData.ID)
-            Dim PageIndexBytes As Byte() = FData.PageIndexBytes
-            FStream.Write(PageIndexBytes, 0, PageIndexBytes.Count)
-
-            'Write Data Block
             'Support nothing write for pre-allocate byte space
             If FData.StartPOS > 0 AndAlso FData.Value IsNot Nothing AndAlso FData.Value.Count > 0 Then
                 FStream.Position = FData.StartPOS
                 FStream.Write(FData.Value, 0, FData.Value.Count)
             End If
         Else
-            'Write Data Index
-            PageFileBufferWriter.Write(FStream, GetDataIndexPOS(FData.ID), FData.PageIndexBytesFull)
-
-            'Write Data Block
             If FData.StartPOS > 0 AndAlso FData.Value IsNot Nothing AndAlso FData.Value.Count > 0 Then
                 PageFileBufferWriter.Write(FStream, FData.StartPOS, FData.Value)
             End If
@@ -386,8 +630,8 @@ Public Class Page
 
 #End Region
 
-
 #Region "Read Data"
+
     Public Function ReadData(ByVal DataID As Int64) As Data
         'Check Input
         If DataID <= 0 Then Return Nothing
@@ -406,10 +650,22 @@ Public Class Page
 
         'Get File Stream
         Dim FStream As FileStream
-        FStream = File.Open(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+        Dim IfUseStreamPool As Boolean = False
+
+        If IfUseStreamPool Then
+            FStream = GetOneFileStream()
+        Else
+            FStream = File.Open(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+        End If
 
         'Read Data Index
-        Dim DataIndex As Byte() = ReadDataIndex(FStream, DataID)
+        Dim DataIndex As Byte()
+        If Config.SupportPageHeaderBuffer Then
+            DataIndex = ReadFromHeaderMemory(GetDataIndexPOS(DataID), Config.DataPageHeaderDataIndexSize)
+        Else
+            DataIndex = ReadDataIndex(FStream, DataID)
+        End If
+
         FData.PageIndexBytes = DataIndex
 
         If FData.ID = 0 AndAlso FData.Length = 0 AndAlso FData.StartPOS = 0 Then
@@ -439,10 +695,14 @@ Public Class Page
 
         End If
 
-        'Close Stream
-        FStream.Flush()
-        FStream.Close()
-        FStream.Dispose()
+        'Close or Return FileStream
+        If IfUseStreamPool Then
+            ReturnOneFileStream(FStream)
+        Else
+            FStream.Close()
+            FStream.Dispose()
+            FStream = Nothing
+        End If
 
         'Return Value
         Return FData
@@ -474,19 +734,22 @@ Public Class Page
 
 #End Region
 
-
 #Region "Dispose"
 
     Public Sub Flush()
         'Update Length To File
-        If UpdateLengthToFileTimer IsNot Nothing Then
+        If UpdateHeaderToFileTimer IsNot Nothing Then
             Try
-                UpdateLengthToFileTimer.Dispose()
-                UpdateLengthToFileTimer = Nothing
+                UpdateHeaderToFileTimer.Dispose()
+                UpdateHeaderToFileTimer = Nothing
             Catch ex As Exception
             End Try
             Try
-                UpdateLengthToFile()
+                If Config.SupportPageHeaderBuffer Then
+                    FlushHeaderToFile()
+                Else
+                    UpdateLengthToFile()
+                End If
             Catch ex As Exception
             End Try
         End If
@@ -498,7 +761,13 @@ Public Class Page
             Catch ex As Exception
             End Try
         End If
+
+        'Flush FileStreams
+        FlushAllFileStreams()
+
     End Sub
+
+    Private disposedValue As Boolean
 
     Protected Overridable Sub Dispose(disposing As Boolean)
         If Not disposedValue Then
@@ -520,6 +789,9 @@ Public Class Page
                 Catch ex As Exception
                 End Try
             End If
+
+            'Destory FileStream
+            DestoryAllFileStreams()
 
             disposedValue = True
         End If
@@ -610,5 +882,6 @@ Public Class Page
     End Function
 
 #End Region
+
 
 End Class

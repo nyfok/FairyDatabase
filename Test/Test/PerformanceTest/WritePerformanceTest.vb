@@ -8,7 +8,7 @@ Public Class WritePerformanceTest
     Private Shared SampleBytes(ByteSize - 1) As Byte
     Private Shared SampleBytesHash As String
 
-    Private Shared IfVerifyData As Boolean = False
+    Private Shared IfVerifyData As Boolean
 
     Public Shared Sub Start()
         'Write Log
@@ -23,7 +23,7 @@ Public Class WritePerformanceTest
         'Init RandomIDs, IfVerifyData
         Randomize()
         PrepareRandomIDs()
-        IfVerifyData = False
+        IfVerifyData = True
 
         'Generate SampleBytes
         For I = 0 To ByteSize - 1
@@ -406,7 +406,8 @@ Public Class WritePerformanceTest
             For Each PageItem In Page.Pages
                 If PageItem.Value IsNot Nothing Then
                     Try
-                        PageItem.Value.WriteLengthToMemory(0)
+                        PageItem.Value.ClearPageHeaderMemory()
+                        PageItem.Value.Dispose()
                         If System.IO.File.Exists(PageItem.Value.FilePath) Then System.IO.File.Delete(PageItem.Value.FilePath)
                         If System.IO.File.Exists(PageItem.Value.PendingRemoveBlocksFilePath) Then System.IO.File.Delete(PageItem.Value.PendingRemoveBlocksFilePath)
                     Catch ex As Exception

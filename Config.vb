@@ -69,6 +69,8 @@
     ''' </summary>
     Public Const DataPageHeaderSize As Int64 = DataPageHeaderMetaSize + DataPageHeaderDataIndexSize * DataPageSize  'Data page header size
 
+#Region "Write Buffer"
+
     ''' <summary>
     ''' Set if support write buffer. Still under performance optimization. For continous DataID blocks writing can enable writebuffer, otherwise suggest disable it.
     ''' If True => Write to disk after WriteBufferFlushMSeconds or buffer size >= PageWriteBufferSize.
@@ -86,10 +88,29 @@
     ''' </summary>
     Public Const DataPageWriteBufferSize As Int64 = 100 * 1024 '100K Bytes
 
+#End Region
+
+#Region "Page Header Buffer"
+
     ''' <summary>
     ''' Page's data header buffer
     ''' </summary>
-    Public Shared SupportPageHeaderBuffer As Boolean = True
+    Public Const SupportPageHeaderBuffer As Boolean = False
+
+    ''' <summary>
+    ''' Page Header wait MSeconds before auto flush
+    ''' </summary>
+    Public Const PageHeaderBufferFlushMSeconds As Integer = 500
+
+    ''' <summary>
+    ''' Page Length wait MSeconds before flush
+    ''' If SupportPageHeaderBuffer=True, will use PageHeaderBufferFlushMSeconds time to flush all the page header instead flush length only.
+    ''' If SupportPageHeaderBuffer=False, will use PageLengthFlushMSeconds to flush length only
+    ''' </summary>
+    Public Const PageLengthFlushMSeconds As Integer = 1000
+
+#End Region
+
 
 #End Region
 
