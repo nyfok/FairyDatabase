@@ -6,6 +6,8 @@ Imports System.Threading
 Module Main
 
     Sub Main(args As String())
+        'Add Log
+        Console.WriteLine("Program start.")
 
         'Execute Test
         Select Case 1

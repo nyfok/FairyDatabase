@@ -23,11 +23,14 @@ Public Class WritePerformanceTest
         Next
         WriteBytesHash = GetBytesHash(WriteBytes)
 
-        'Init RandomIDs
+        'Init RandomIDs, IfVerifyData
         PrepareRandomIDs()
+        IfVerifyData = False
 
         'Test Single Thread
         For TestNumber = 1 To 2
+            Console.WriteLine("Processing Single Thread Test...")
+
             TestWriteFilesInSingleThread()
             'Console.ReadLine()
             TestWriteInSingleThread(False)
@@ -38,6 +41,8 @@ Public Class WritePerformanceTest
 
         'Test Multiple Threads
         For Each ThreadNumber In New Integer() {2, 4, 8, 16}
+            Console.WriteLine("Processing Multiple Threads Test...")
+
             TestWriteFilesInMultipleThreads(ThreadNumber)
             'Console.ReadLine()
             TestWriteInMultipleThreads(ThreadNumber, False)
@@ -218,9 +223,11 @@ Public Class WritePerformanceTest
         End If
         Console.WriteLine(WriteWayString & " write via single thread using " & MSeconds & "ms. (ByteSize=" & WriteBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
 
-        Dim FWriter As FileBufferWriter = Page.GetPage(1).PageFileBufferWriter
-        If FWriter IsNot Nothing Then
-            Console.WriteLine(Now.ToString & ": CreateNewCount_Index=" & FWriter.CreateNewCount_Index & ", CreateNewCount_Block=" & FWriter.CreateNewCount_Block)
+        If FairyDatabase.Config.IfDebugMode Then
+            Dim FWriter As FileBufferWriter = Page.GetPage(1).PageFileBufferWriter
+            If FWriter IsNot Nothing Then
+                Console.WriteLine(Now.ToString & ": CreateNewCount_Index=" & FWriter.CreateNewCount_Index & ", CreateNewCount_Block=" & FWriter.CreateNewCount_Block)
+            End If
         End If
 
         If IfVerifyData Then
