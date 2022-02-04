@@ -2,7 +2,7 @@
 Public Class ReadPerformanceTest
 
     Private Shared ReadNumber As Int64 = 9999
-    Private Shared ByteSize As Int64 = 1000
+    Private Shared ByteSize As Int64 = 100
 
     Private Shared SampleBytes(ByteSize - 1) As Byte
 
@@ -21,8 +21,8 @@ Public Class ReadPerformanceTest
         PrepareRandomIDs()
 
         'Prepare Test Data
-        'PrepareTestData()
-        'Console.WriteLine()
+        PrepareTestData()
+        Console.WriteLine()
 
         'Test Single Thread
         For TestNumber = 1 To 2
@@ -89,7 +89,7 @@ Public Class ReadPerformanceTest
         Else
             ReadWayString = "Sequency"
         End If
-        Console.WriteLine(ReadWayString & " read files via single thread using " & MSeconds & "ms.     " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & " Copy/s, ReadSpeed=" & ReadSpeed & " MB/s)")
+        Console.WriteLine(ReadWayString & " read files via single thread using " & MSeconds & "ms.        " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & " Copy/s, ReadSpeed=" & ReadSpeed & " MB/s)")
     End Sub
 
     Private Shared Sub TestReadFilesInMultipleThreads(ByVal ThreadNumber As Integer, ByVal IfRandomRead As Boolean)

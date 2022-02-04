@@ -108,7 +108,7 @@ Public Class WritePerformanceTest
         Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
-        Console.WriteLine("Write files via single thread using " & MSeconds & "ms. " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+        Console.WriteLine("Write files via single thread using " & MSeconds & "ms. " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
     End Sub
 
@@ -155,7 +155,7 @@ Public Class WritePerformanceTest
         Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
-        Console.WriteLine("Write files via " & ThreadNumber & " threads using " & MSeconds & "ms.      " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+        Console.WriteLine("Write files via " & ThreadNumber & " threads using " & MSeconds & "ms.      " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
     End Sub
 
@@ -226,7 +226,7 @@ Public Class WritePerformanceTest
         Else
             WriteWayString = "Sequency"
         End If
-        Console.WriteLine(WriteWayString & " write db via single thread using " & MSeconds & "ms.  " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+        Console.WriteLine(WriteWayString & " write db via single thread using " & MSeconds & "ms.  " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
         If FairyDatabase.Config.IfDebugMode Then
             Dim FWriter As FileBufferWriter = Page.GetPage(1).PageFileBufferWriter
@@ -284,7 +284,7 @@ Public Class WritePerformanceTest
         Else
             WriteWayString = "Sequency"
         End If
-        Console.WriteLine(WriteWayString & " write db via " & ThreadNumber & " threads using " & MSeconds & "ms.     " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+        Console.WriteLine(WriteWayString & " write db via " & ThreadNumber & " threads using " & MSeconds & "ms.     " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
         If IfVerifyData Then
             'PrintFileLength()
