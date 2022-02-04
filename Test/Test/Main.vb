@@ -10,7 +10,7 @@ Module Main
         Console.WriteLine("Program start.")
 
         'Execute Test
-        Select Case 2
+        Select Case 1
             Case 1
                 Demo.Start()
             Case 2

@@ -2,7 +2,7 @@
 Public Class ReadPerformanceTest
 
     Private Shared ReadNumber As Int64 = 9999
-    Private Shared ByteSize As Int64 = 100
+    Private Shared ByteSize As Int64 = 1000
 
     Private Shared SampleBytes(ByteSize - 1) As Byte
 
@@ -89,7 +89,7 @@ Public Class ReadPerformanceTest
         Else
             ReadWayString = "Sequency"
         End If
-        Console.WriteLine(ReadWayString & " read files via single thread using " & MSeconds & "ms. (ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & "Copy/s, ReadSpeed=" & ReadSpeed & "MB/s)")
+        Console.WriteLine(ReadWayString & " read files via single thread using " & MSeconds & "ms.     " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & " Copy/s, ReadSpeed=" & ReadSpeed & " MB/s)")
     End Sub
 
     Private Shared Sub TestReadFilesInMultipleThreads(ByVal ThreadNumber As Integer, ByVal IfRandomRead As Boolean)
@@ -129,7 +129,7 @@ Public Class ReadPerformanceTest
         Else
             ReadWayString = "Sequency"
         End If
-        Console.WriteLine(ReadWayString & " read files via " & ThreadNumber & " Threads using " & MSeconds & "ms. (ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & "Copy/s, ReadSpeed=" & ReadSpeed & "MB/s)")
+        Console.WriteLine(ReadWayString & " read files via " & ThreadNumber & " Threads using " & MSeconds & "ms.     " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & " Copy/s, ReadSpeed=" & ReadSpeed & " MB/s)")
     End Sub
 
     Private Shared Sub TestReadFilesInMultipleThreadsDO(ByVal ThreadID As Integer)
@@ -159,6 +159,8 @@ Public Class ReadPerformanceTest
 #Region "Test Read From DB"
 
     Private Shared Sub TestReadInSingleThread(ByVal IfRandomRead As Boolean)
+        'Clear Resources
+        Clear()
 
         'Init Parameters
         CurrentDataID = 0
@@ -190,12 +192,15 @@ Public Class ReadPerformanceTest
         Else
             ReadWayString = "Sequency"
         End If
-        Console.WriteLine(ReadWayString & " read db via single thread using " & MSeconds & "ms. (ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & "Copy/s, ReadSpeed=" & ReadSpeed & "MB/s)")
+        Console.WriteLine(ReadWayString & " read db via single thread using " & MSeconds & "ms.         " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & " Copy/s, ReadSpeed=" & ReadSpeed & " MB/s)")
     End Sub
 
     Private Shared ManualResetEvents As Threading.ManualResetEvent()
     Private Shared TestReadInMultipleThreads_IfRandomRead As Boolean
     Private Shared Sub TestReadInMultipleThreads(ByVal ThreadNumber As Integer, ByVal IfRandomRead As Boolean)
+        'Clear Resources
+        Clear()
+
         'Init Parameters
         ReDim ManualResetEvents(ThreadNumber - 1)
         TestReadInMultipleThreads_IfRandomRead = IfRandomRead
@@ -232,7 +237,7 @@ Public Class ReadPerformanceTest
         Else
             ReadWayString = "Sequency"
         End If
-        Console.WriteLine(ReadWayString & " read db via " & ThreadNumber & " Threads using " & MSeconds & "ms. (ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & "Copy/s, ReadSpeed=" & ReadSpeed & "MB/s)")
+        Console.WriteLine(ReadWayString & " read db via " & ThreadNumber & " Threads using " & MSeconds & "ms.         " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & " Copy/s, ReadSpeed=" & ReadSpeed & " MB/s)")
     End Sub
 
     Private Shared Sub TestReadInMultipleThreadsDO(ByVal ThreadID As Integer)
@@ -398,15 +403,15 @@ Public Class ReadPerformanceTest
         Next
     End Sub
 
+
     Private Shared Sub Clear()
-        'Clear Data Base
+
         If Page.Pages IsNot Nothing Then
             For Each PageItem In Page.Pages
                 If PageItem.Value IsNot Nothing Then
                     Try
                         PageItem.Value.ClearPageHeaderMemory()
-                        If System.IO.File.Exists(PageItem.Value.FilePath) Then System.IO.File.Delete(PageItem.Value.FilePath)
-                        If System.IO.File.Exists(PageItem.Value.PendingRemoveBlocksFilePath) Then System.IO.File.Delete(PageItem.Value.PendingRemoveBlocksFilePath)
+                        PageItem.Value.Dispose()
                     Catch ex As Exception
                         Console.WriteLine(ex.ToString)
                     End Try
@@ -414,18 +419,11 @@ Public Class ReadPerformanceTest
             Next
         End If
 
-        If System.IO.Directory.Exists(Config.DatabaseFolderPath) Then
-            For Each FilePath In System.IO.Directory.GetFiles(Config.DatabaseFolderPath, "*.fdb", System.IO.SearchOption.AllDirectories)
-                Try
-                    System.IO.File.Delete(FilePath)
-                Catch ex As Exception
-                End Try
-            Next
-        End If
-
         Page.Pages = New Concurrent.ConcurrentDictionary(Of Int64, Page)
 
+        'Console.WriteLine("Related resource cleared.")
     End Sub
+
 
 #End Region
 

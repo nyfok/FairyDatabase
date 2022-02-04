@@ -4,13 +4,12 @@ Public Class TestOthers
 
     Public Shared Sub Start()
 
-        Select Case 3
+        Select Case 4
             Case 1
                 TestSharedMemory()
             Case 2
                 TestArrayObjectPerformance()
             Case 3
-
                 Dim FDictionary As New Dictionary(Of Integer, Integer)
                 FDictionary.Add(3001, 1)
                 FDictionary.Add(3002, 5)
@@ -39,9 +38,61 @@ Public Class TestOthers
                 For Each Item In SortedItems2
                     Console.WriteLine("ID: " & Item)
                 Next
+
+            Case 4
+                Randomize()
+
+                For I = 1 To 100
+                    Dim IfNewCreate As Boolean = False
+                    Dim FSM As New SharedMemory("Test", 4, IfNewCreate)
+                    Console.WriteLine(Now.ToString & ": IfNewCreate=" & IfNewCreate)
+
+                    If IfNewCreate Then
+                        Dim FBytes As Byte() = FSM.Read()
+                        Console.WriteLine(Now.ToString & ": Read from memroy: " & FBytes(0) & "," & FBytes(1) & "," & FBytes(2) & "," & FBytes(3))
+
+                        ReDim FBytes(3)
+                        For J = 0 To FBytes.Length - 1
+                            FBytes(J) = Rnd() * 255
+                        Next
+
+                        FSM.Write(FBytes)
+                        Console.WriteLine(Now.ToString & ": Write to memory")
+                    Else
+                        Dim FBytes As Byte() = FSM.Read()
+                        Console.WriteLine(Now.ToString & ": Read from memroy: " & FBytes(0) & "," & FBytes(1) & "," & FBytes(2) & "," & FBytes(3))
+
+                        If I = 10 Then
+                            FSM.Dispose()
+                            Console.WriteLine(Now.ToString & ": Sharedmemory disposed.")
+                        End If
+                    End If
+
+                    Console.ReadLine()
+                Next
         End Select
     End Sub
 
+
+    Private Shared Sub TestSharedMemory()
+        For ThreadID = 1 To 10
+            System.Threading.ThreadPool.QueueUserWorkItem(New System.Threading.WaitCallback(AddressOf TestSharedMemoryDo), ThreadID)
+        Next
+    End Sub
+
+    Private Shared Sub TestSharedMemoryDo(ByVal ThreadID As Integer)
+        Dim FBytes(3) As Byte
+        For I = 0 To FBytes.Length - 1
+            FBytes(I) = I
+        Next
+
+        Dim FSM As New SharedMemory("Test", 100)
+        For i = 1 To 100
+            FSM.Write(FBytes)
+            Dim FBytes2 As Byte() = FSM.Read(0)
+            Console.WriteLine(FBytes2(2))
+        Next
+    End Sub
 
     Private Sub TestRead(ByVal ThreadID As Integer)
 
@@ -59,24 +110,6 @@ Public Class TestOthers
     End Sub
 
 
-    Private Shared Sub TestSharedMemory()
-        For ThreadID = 1 To 10
-            System.Threading.ThreadPool.QueueUserWorkItem(New System.Threading.WaitCallback(AddressOf TestSharedMemoryDo), ThreadID)
-        Next
-    End Sub
-    Private Shared Sub TestSharedMemoryDo(ByVal ThreadID As Integer)
-        Dim FBytes(3) As Byte
-        For I = 0 To FBytes.Length - 1
-            FBytes(I) = I
-        Next
-
-        Dim FSM As New SharedMemory("Test", 100)
-        For i = 1 To 100
-            FSM.Write(FBytes)
-            Dim FBytes2 As Byte() = FSM.Read(0)
-            Console.WriteLine(FBytes2(2))
-        Next
-    End Sub
 
     Private Shared Sub TestArrayObjectPerformance()
         'Test Insert Speed via Multiple ways

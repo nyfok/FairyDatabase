@@ -95,7 +95,7 @@
     ''' <summary>
     ''' Page's data header buffer
     ''' </summary>
-    Public Const SupportPageHeaderBuffer As Boolean = False
+    Public Const SupportPageHeaderBuffer As Boolean = True
 
     ''' <summary>
     ''' Page Header wait MSeconds before auto flush

@@ -131,10 +131,10 @@ Public Class Page
                 End If
             Loop
 
-            Dim NewFileStream As FileStream = File.Open(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+            Dim NewFileStream As FileStream = File.Open(FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
             FileStreams.Add(NewFileStream)
 
-            Console.WriteLine("FileStreams.Count: " & FileStreams.Count)
+            'Console.WriteLine("FileStreams.Count: " & FileStreams.Count)
 
             Return NewFileStream
         End SyncLock
@@ -355,7 +355,7 @@ Public Class Page
     ''' <summary>
     ''' First 8 Bytes: Length
     ''' </summary>
-    Private PageHeaderMemory As SharedMemory
+    Public PageHeaderMemory As SharedMemory
 
     ''' <summary>
     ''' 
@@ -389,24 +389,41 @@ Public Class Page
         Dim IfNewCreate As Boolean = False
         PageHeaderMemory = New SharedMemory("FDBP" & ID, MemorySize, IfNewCreate)
 
-        'Init Length
+        'Init Header or Length
         If IfNewCreate Then
-            LengthMutex.WaitOne()
-
-            If File.Exists(FilePath) Then
-                If Config.SupportPageHeaderBuffer Then
-                    Dim HeaderBytes As Byte() = ReadFromHeaderFile()
-                    WriteToHeaderMemory(HeaderBytes)
-                Else
-                    Dim Length As Int64 = ReadLengthFromFile()
-                    WriteLengthToMemory(Length)
-                End If
+            LoadPageHeaderMemoryFromFile()
+        Else
+            Dim Length As Int64 = ReadLengthFromMemory()
+            If Length <= 0 Then
+                LoadPageHeaderMemoryFromFile()
             End If
-
-            LengthMutex.Release()
         End If
     End Sub
 
+    Private Sub LoadPageHeaderMemoryFromFile()
+        'Wait Signal
+        LengthMutex.WaitOne()
+
+        'Check if already read by other process
+        Dim Length As Int64 = ReadLengthFromMemory()
+        If Length > 0 Then Return
+
+        'Console.WriteLine("LoadPageHeaderMemoryFromFile")
+
+        'Execute Load
+        If File.Exists(FilePath) Then
+            If Config.SupportPageHeaderBuffer Then
+                Dim HeaderBytes As Byte() = ReadFromHeaderFile()
+                WriteToHeaderMemory(HeaderBytes)
+            Else
+                Length = ReadLengthFromFile()
+                WriteLengthToMemory(Length)
+            End If
+        End If
+
+        'Release Signal
+        LengthMutex.Release()
+    End Sub
     Public Sub ClearPageHeaderMemory()
         Dim FBytes(PageHeaderMemory.Size - 1) As Byte
         PageHeaderMemory.Write(FBytes)
@@ -528,7 +545,13 @@ Public Class Page
 
         'Get File Stream
         Dim FStream As FileStream
-        FStream = File.Open(FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
+        Dim IfUseStreamPool As Boolean = True
+
+        If IfUseStreamPool Then
+            FStream = GetOneFileStream()
+        Else
+            FStream = File.Open(FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
+        End If
 
         'Check if re-use the current section
         Dim IfReUseBlock As Boolean = False
@@ -620,10 +643,14 @@ Public Class Page
             End If
         End If
 
-        'Close Stream
-        FStream.Flush()
-        FStream.Close()
-        FStream.Dispose()
+        'Return or Close Stream
+        If IfUseStreamPool Then
+            ReturnOneFileStream(FStream)
+        Else
+            FStream.Flush()
+            FStream.Close()
+            FStream.Dispose()
+        End If
 
     End Sub
 
@@ -650,7 +677,7 @@ Public Class Page
 
         'Get File Stream
         Dim FStream As FileStream
-        Dim IfUseStreamPool As Boolean = False
+        Dim IfUseStreamPool As Boolean = True
 
         If IfUseStreamPool Then
             FStream = GetOneFileStream()
