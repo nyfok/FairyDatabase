@@ -5,7 +5,7 @@
     ''' </summary>
     Public Shared IfDebugMode As Boolean = False
 
-    Public Shared Sub Init(Optional ByVal DatabaseFolderPath As String = "db\", Optional ByVal DatabasePageFileInitSize As Int64 = 100 * 1024 * 1024, Optional ByVal SupportWriteBuffer As Boolean = True)
+    Public Shared Sub Init(Optional ByVal DatabaseFolderPath As String = "db\", Optional ByVal DatabasePageFileInitSize As Int64 = 2 * 1024 * 1024, Optional ByVal SupportWriteBuffer As Boolean = True)
         Config.DatabaseFolderPath = DatabaseFolderPath
         Config.DatabasePageFileInitSize = DatabasePageFileInitSize
         Config.SupportWriteBuffer = SupportWriteBuffer
@@ -42,7 +42,7 @@
     ''' <summary>
     ''' Database's Page File's Init Size. Large size will get better read/write performance because request big space at once will get more continous disk spaces.
     ''' </summary>
-    Public Shared DatabasePageFileInitSize As Int64 = 100 * 1024 * 1024   '100M Bytes
+    Public Shared DatabasePageFileInitSize As Int64 = 2 * 1024 * 1024   '2M Bytes
 
     ''' <summary>
     ''' How many datas in one data page file.
@@ -86,6 +86,10 @@
     ''' </summary>
     Public Const DataPageWriteBufferSize As Int64 = 100 * 1024 '100K Bytes
 
+    ''' <summary>
+    ''' Page's data header buffer
+    ''' </summary>
+    Public Shared SupportPageHeaderBuffer As Boolean = True
 
 #End Region
 

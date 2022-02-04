@@ -5,37 +5,43 @@ Public Class WritePerformanceTest
     Private Shared WriteNumber As Int64 = 9999
     Private Shared ByteSize As Int64 = 100
 
-    Private Shared WriteBytes(ByteSize - 1) As Byte
-    Private Shared WriteBytesHash As String
+    Private Shared SampleBytes(ByteSize - 1) As Byte
+    Private Shared SampleBytesHash As String
 
     Private Shared IfVerifyData As Boolean = False
 
     Public Shared Sub Start()
+        'Write Log
+        Console.WindowWidth = 150
+        Console.WriteLine("Test: ByteSize=" & ByteSize & ", TestNumber=" & WriteNumber)
+        Console.WriteLine()
+
         'Init FairyDatabase Config
         FairyDatabase.Config.Init(, 2 * 1024 * 1024, True)
         FairyDatabase.Config.IfDebugMode = False
 
-        'Generate WriteBytes
-        Randomize()
-        For I = 0 To ByteSize - 1
-            Dim Number As Single = Rnd()
-            WriteBytes(I) = Int(Number * 256)
-        Next
-        WriteBytesHash = GetBytesHash(WriteBytes)
-
         'Init RandomIDs, IfVerifyData
+        Randomize()
         PrepareRandomIDs()
         IfVerifyData = False
+
+        'Generate SampleBytes
+        For I = 0 To ByteSize - 1
+            Dim Number As Single = Rnd()
+            SampleBytes(I) = Int(Number * 256)
+        Next
+        SampleBytesHash = GetBytesHash(SampleBytes)
 
         'Test Single Thread
         For TestNumber = 1 To 2
             Console.WriteLine("Processing Single Thread Test...")
 
             TestWriteFilesInSingleThread()
-            'Console.ReadLine()
-            TestWriteInSingleThread(False)
-            'Console.ReadLine()
-            TestWriteInSingleThread(True)
+
+            For Each IfRandomWrite In New Boolean() {False, True}
+                TestWriteInSingleThread(IfRandomWrite)
+            Next
+
             Console.ReadLine()
         Next
 
@@ -44,29 +50,30 @@ Public Class WritePerformanceTest
             Console.WriteLine("Processing Multiple Threads Test...")
 
             TestWriteFilesInMultipleThreads(ThreadNumber)
-            'Console.ReadLine()
-            TestWriteInMultipleThreads(ThreadNumber, False)
-            'Console.ReadLine()
-            TestWriteInMultipleThreads(ThreadNumber, True)
+
+            For Each IfRandomWrite In New Boolean() {False, True}
+                TestWriteInMultipleThreads(ThreadNumber, IfRandomWrite)
+            Next
+
             Console.ReadLine()
         Next
     End Sub
 
 #Region "Test Write to Files"
 
+    Private Shared TestWriteFileFolderPath As String = "temp\writeperformancetest\"
     Private Shared Sub TestWriteFilesInSingleThread()
         'Init Parameters
-        Dim FolderPath As String = "temp\writeperformancetest\"
         Dim SubFolderPath As String
         Dim FilePath As String
 
         'Clear Resources
-        If System.IO.Directory.Exists(FolderPath) Then
-            For Each SubFolderPath In System.IO.Directory.GetDirectories(FolderPath)
+        If System.IO.Directory.Exists(TestWriteFileFolderPath) Then
+            For Each SubFolderPath In System.IO.Directory.GetDirectories(TestWriteFileFolderPath)
                 System.IO.Directory.Delete(SubFolderPath, True)
             Next
         Else
-            System.IO.Directory.CreateDirectory(FolderPath)
+            System.IO.Directory.CreateDirectory(TestWriteFileFolderPath)
         End If
 
         'Init Parameters
@@ -81,9 +88,9 @@ Public Class WritePerformanceTest
             Dim DataID As Int64 = GetNextDataID(False)
             If DataID <= 0 Then Exit Do
 
-            Dim FData As New Data(DataID, WriteBytes)
+            Dim FData As New Data(DataID, SampleBytes)
 
-            SubFolderPath = FolderPath & Int(DataID / 1000) & "K"
+            SubFolderPath = TestWriteFileFolderPath & Int(DataID / 1000) & "K"
             If System.IO.Directory.Exists(SubFolderPath) = False Then System.IO.Directory.CreateDirectory(SubFolderPath)
             FilePath = SubFolderPath & "\" & DataID & ".dat"
 
@@ -96,28 +103,27 @@ Public Class WritePerformanceTest
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim WriteSpeed As Decimal = WriteNumber * WriteBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim WriteSpeed As Decimal = WriteNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
         WriteSpeed = Int(WriteSpeed * 1000) / 1000
         Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
-        Console.WriteLine("Write files via single thread using " & MSeconds & "ms. (ByteSize=" & WriteBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+        Console.WriteLine("Write files via single thread using " & MSeconds & "ms. (ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
 
     End Sub
 
 
     Private Shared Sub TestWriteFilesInMultipleThreads(ByVal ThreadNumber As Integer)
         'Init Parameters
-        Dim FolderPath As String = "temp\writeperformancetest\"
         Dim SubFolderPath As String
 
         'Clear Resources
-        If System.IO.Directory.Exists(FolderPath) Then
-            For Each SubFolderPath In System.IO.Directory.GetDirectories(FolderPath)
+        If System.IO.Directory.Exists(TestWriteFileFolderPath) Then
+            For Each SubFolderPath In System.IO.Directory.GetDirectories(TestWriteFileFolderPath)
                 System.IO.Directory.Delete(SubFolderPath, True)
             Next
         Else
-            System.IO.Directory.CreateDirectory(FolderPath)
+            System.IO.Directory.CreateDirectory(TestWriteFileFolderPath)
         End If
 
         'Init Parameters
@@ -144,18 +150,17 @@ Public Class WritePerformanceTest
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim WriteSpeed As Decimal = WriteNumber * WriteBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim WriteSpeed As Decimal = WriteNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
         WriteSpeed = Int(WriteSpeed * 1000) / 1000
         Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
-        Console.WriteLine("Write files via " & ThreadNumber & " threads using " & MSeconds & "ms. (ByteSize=" & WriteBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+        Console.WriteLine("Write files via " & ThreadNumber & " threads using " & MSeconds & "ms. (ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
 
     End Sub
 
     Private Shared Sub TestWriteFilesInMultipleThreadsDO(ByVal ThreadID As Integer)
         'Init Parameters
-        Dim FolderPath As String = "temp\writeperformancetest\"
         Dim SubFolderPath As String
         Dim FilePath As String
 
@@ -164,9 +169,9 @@ Public Class WritePerformanceTest
             Dim DataID As Int64 = GetNextDataID(False)
             If DataID <= 0 Then Exit Do
 
-            Dim FData As New Data(DataID, WriteBytes)
+            Dim FData As New Data(DataID, SampleBytes)
 
-            SubFolderPath = FolderPath & Int(DataID / 1000) & "K"
+            SubFolderPath = TestWriteFileFolderPath & Int(DataID / 1000) & "K"
             If System.IO.Directory.Exists(SubFolderPath) = False Then System.IO.Directory.CreateDirectory(SubFolderPath)
             FilePath = SubFolderPath & "\" & DataID & ".dat"
 
@@ -200,7 +205,7 @@ Public Class WritePerformanceTest
             Dim DataID As Int64 = GetNextDataID(IfRandomRead)
             If DataID <= 0 Then Exit Do
 
-            Dim FData As New Data(DataID, WriteBytes)
+            Dim FData As New Data(DataID, SampleBytes)
             Page.Write(FData)
 
             'Console.WriteLine("Write " & DataID & " ok.")
@@ -210,7 +215,7 @@ Public Class WritePerformanceTest
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim WriteSpeed As Decimal = WriteNumber * WriteBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim WriteSpeed As Decimal = WriteNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
         WriteSpeed = Int(WriteSpeed * 1000) / 1000
         Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
@@ -221,7 +226,7 @@ Public Class WritePerformanceTest
         Else
             WriteWayString = "Sequency"
         End If
-        Console.WriteLine(WriteWayString & " write via single thread using " & MSeconds & "ms. (ByteSize=" & WriteBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+        Console.WriteLine(WriteWayString & " write db via single thread using " & MSeconds & "ms. (ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
 
         If FairyDatabase.Config.IfDebugMode Then
             Dim FWriter As FileBufferWriter = Page.GetPage(1).PageFileBufferWriter
@@ -268,7 +273,7 @@ Public Class WritePerformanceTest
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim WriteSpeed As Decimal = WriteNumber * WriteBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim WriteSpeed As Decimal = WriteNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
         WriteSpeed = Int(WriteSpeed * 1000) / 1000
         Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
@@ -279,7 +284,7 @@ Public Class WritePerformanceTest
         Else
             WriteWayString = "Sequency"
         End If
-        Console.WriteLine(WriteWayString & " write via " & ThreadNumber & " threads using " & MSeconds & "ms. (ByteSize=" & WriteBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
+        Console.WriteLine(WriteWayString & " write db via " & ThreadNumber & " threads using " & MSeconds & "ms. (ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & "Copy/s, WriteSpeed=" & WriteSpeed & "MB/s)")
 
         If IfVerifyData Then
             PrintFileLength()
@@ -294,7 +299,7 @@ Public Class WritePerformanceTest
             Dim DataID As Int64 = GetNextDataID(TestWriteInMultipleThreads_IfRandomRead)
             If DataID <= 0 Then Exit Do
 
-            Dim FData As New Data(DataID, WriteBytes)
+            Dim FData As New Data(DataID, SampleBytes)
             Page.Write(FData)
 
             'Console.WriteLine("(" & ThreadID & ") Write " & DataID & " ok.")
@@ -383,7 +388,7 @@ Public Class WritePerformanceTest
             End If
 
             Dim BytesHash As String = GetBytesHash(FData.Value)
-            If WriteBytesHash <> BytesHash Then
+            If SampleBytesHash <> BytesHash Then
                 ErrorCount = ErrorCount + 1
             End If
         Next

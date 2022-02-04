@@ -10,12 +10,14 @@ Module Main
         Console.WriteLine("Program start.")
 
         'Execute Test
-        Select Case 1
+        Select Case 3
             Case 1
-                WritePerformanceTest.Start()
+                Demo.Start()
             Case 2
-                ReadPerformanceTest.Start()
+                WritePerformanceTest.Start()
             Case 3
+                ReadPerformanceTest.Start()
+            Case 4
                 TestOthers.Start()
 
         End Select
