@@ -7,7 +7,6 @@ Public Class WritePerformanceTest
 
     Private Shared SampleBytes(ByteSize - 1) As Byte
     Private Shared SampleBytesHash As String
-
     Private Shared IfVerifyData As Boolean
 
     Public Shared Sub Start()
@@ -33,26 +32,30 @@ Public Class WritePerformanceTest
         SampleBytesHash = GetBytesHash(SampleBytes)
 
         'Test Single Thread
+        Console.WriteLine("Processing Single Thread Test...")
         For TestNumber = 1 To 2
-            Console.WriteLine("Processing Single Thread Test...")
-
             TestWriteFilesInSingleThread()
 
             For Each IfRandomWrite In New Boolean() {False, True}
                 TestWriteInSingleThread(IfRandomWrite)
             Next
 
-            Console.ReadLine()
+            Console.WriteLine()
         Next
+        Console.ReadLine()
 
         'Test Multiple Threads
-        For Each ThreadNumber In New Integer() {2, 4, 8, 16}
+        For Each ThreadNumber In New Integer() {2, 4, 8, 16, 32, 64, 128}
             Console.WriteLine("Processing Multiple Threads Test...")
 
-            TestWriteFilesInMultipleThreads(ThreadNumber)
+            For TestNumber = 1 To 2
+                TestWriteFilesInMultipleThreads(ThreadNumber)
 
-            For Each IfRandomWrite In New Boolean() {False, True}
-                TestWriteInMultipleThreads(ThreadNumber, IfRandomWrite)
+                For Each IfRandomWrite In New Boolean() {False, True}
+                    TestWriteInMultipleThreads(ThreadNumber, IfRandomWrite)
+                Next
+
+                Console.WriteLine()
             Next
 
             Console.ReadLine()
@@ -63,6 +66,9 @@ Public Class WritePerformanceTest
 
     Private Shared TestWriteFileFolderPath As String = "temp\writeperformancetest\"
     Private Shared Sub TestWriteFilesInSingleThread()
+        'Clear and Init Resources
+        ClearAndInitResources()
+
         'Init Parameters
         Dim SubFolderPath As String
         Dim FilePath As String
@@ -77,10 +83,6 @@ Public Class WritePerformanceTest
         End If
 
         'Init Parameters
-        CurrentDataID = 0
-        NextDataIDs = New HashSet(Of Int64)
-        NextDataIDs.UnionWith(RandomIDs)
-
         Dim StartTime As DateTime = Now
 
         'Exectue
@@ -108,12 +110,16 @@ Public Class WritePerformanceTest
         Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
-        Console.WriteLine("Write files via single thread using " & MSeconds & "ms. " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
+        Dim LogString = "Write files via single thread using " & MSeconds & "ms.                                                         "
+        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
     End Sub
 
 
     Private Shared Sub TestWriteFilesInMultipleThreads(ByVal ThreadNumber As Integer)
+        'Clear and Init Resources
+        ClearAndInitResources()
+
         'Init Parameters
         Dim SubFolderPath As String
 
@@ -128,10 +134,6 @@ Public Class WritePerformanceTest
 
         'Init Parameters
         ReDim ManualResetEvents(ThreadNumber - 1)
-
-        CurrentDataID = 0
-        NextDataIDs = New HashSet(Of Int64)
-        NextDataIDs.UnionWith(RandomIDs)
 
         Dim StartTime As DateTime = Now
 
@@ -155,7 +157,8 @@ Public Class WritePerformanceTest
         Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
-        Console.WriteLine("Write files via " & ThreadNumber & " threads using " & MSeconds & "ms.      " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
+        Dim LogString = "Write files via " & ThreadNumber & " threads using " & MSeconds & "ms.                                                         "
+        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
     End Sub
 
@@ -190,14 +193,10 @@ Public Class WritePerformanceTest
 #Region "Test Write to DB"
 
     Private Shared Sub TestWriteInSingleThread(ByVal IfRandomRead As Boolean)
-        'Clear Resources
-        Clear()
+        'Clear and Init Resources
+        ClearAndInitResources()
 
         'Init Parameters
-        CurrentDataID = 0
-        NextDataIDs = New HashSet(Of Int64)
-        NextDataIDs.UnionWith(RandomIDs)
-
         Dim StartTime As DateTime = Now
 
         'Exectue
@@ -226,7 +225,9 @@ Public Class WritePerformanceTest
         Else
             WriteWayString = "Sequency"
         End If
-        Console.WriteLine(WriteWayString & " write db via single thread using " & MSeconds & "ms.  " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
+
+        Dim LogString = WriteWayString & " write db via single thread using " & MSeconds & "ms.                                                         "
+        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
         If FairyDatabase.Config.IfDebugMode Then
             Dim FWriter As FileBufferWriter = Page.GetPage(1).PageFileBufferWriter
@@ -245,16 +246,12 @@ Public Class WritePerformanceTest
     Private Shared TestWriteInMultipleThreads_IfRandomRead As Boolean
 
     Private Shared Sub TestWriteInMultipleThreads(ByVal ThreadNumber As Integer, ByVal IfRandomRead As Boolean)
-        'Clear Resources
-        Clear()
+        'Clear and Init Resources
+        ClearAndInitResources()
 
         'Init Parameters
         ReDim ManualResetEvents(ThreadNumber - 1)
         TestWriteInMultipleThreads_IfRandomRead = IfRandomRead
-
-        CurrentDataID = 0
-        NextDataIDs = New HashSet(Of Int64)
-        NextDataIDs.UnionWith(RandomIDs)
 
         Dim StartTime As DateTime = Now
 
@@ -284,7 +281,9 @@ Public Class WritePerformanceTest
         Else
             WriteWayString = "Sequency"
         End If
-        Console.WriteLine(WriteWayString & " write db via " & ThreadNumber & " threads using " & MSeconds & "ms.     " & vbTab & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
+
+        Dim LogString = WriteWayString & " write db via " & ThreadNumber & " threads using " & MSeconds & "ms.                                                         "
+        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
         If IfVerifyData Then
             'PrintFileLength()
@@ -312,17 +311,20 @@ Public Class WritePerformanceTest
 #End Region
 
 #Region "RandomIDs, GetNextDataID"
-    Private Shared RandomIDs As HashSet(Of Int64)
+
+    Private Shared RandomIDs As List(Of Int64)
 
     Private Shared Sub PrepareRandomIDs()
         Randomize()
 
-        Dim RemainIDs As New HashSet(Of Int64)
+        'Console.WriteLine("Preparing Random IDs...")
+
+        Dim RemainIDs As New List(Of Int64)
         For I = 1 To WriteNumber
             RemainIDs.Add(I)
         Next
 
-        RandomIDs = New HashSet(Of Int64)
+        RandomIDs = New List(Of Int64)
         Do While RemainIDs.Count > 0
             Dim Index As Integer = Int(Rnd() * RemainIDs.Count)
             Dim ID As Int64 = RemainIDs.ElementAt(Index)
@@ -330,30 +332,29 @@ Public Class WritePerformanceTest
             RemainIDs.Remove(ID)
         Loop
         RemainIDs = Nothing
+
+        'Console.WriteLine("Random IDs inited.")
+        'Console.WriteLine()
     End Sub
 
 
     Private Shared CurrentDataID As Int64 = 0
     Private Shared GetNextDataIDLock As New Object
-    Private Shared NextDataIDs As HashSet(Of Int64)
+    Private Shared NextDataIDs As Concurrent.ConcurrentQueue(Of Int64)
 
     Private Shared Function GetNextDataID(ByVal IfRandomRead As Boolean) As Int64
-        SyncLock GetNextDataIDLock
-            If IfRandomRead = False Then
-                CurrentDataID = CurrentDataID + 1
-                If CurrentDataID <= WriteNumber Then
-                    Return CurrentDataID
-                Else
-                    Return 0
-                End If
+        If IfRandomRead = False Then
+            Dim DataID As Int64 = System.Threading.Interlocked.Increment(CurrentDataID)
+            If DataID > WriteNumber Then Return 0
+            Return DataID
+        Else
+            Dim DataID As Int64
+            If NextDataIDs.TryDequeue(DataID) Then
+                Return DataID
             Else
-                If NextDataIDs.Count = 0 Then Return 0
-
-                CurrentDataID = NextDataIDs.First
-                NextDataIDs.Remove(CurrentDataID)
-                Return CurrentDataID
+                Return 0
             End If
-        End SyncLock
+        End If
     End Function
 
 #End Region
@@ -400,14 +401,15 @@ Public Class WritePerformanceTest
         End If
     End Sub
 
-    Private Shared Sub Clear()
-
+    Private Shared Sub ClearAndInitResources()
+        'Clear Page Files and Memory
         If Page.Pages IsNot Nothing Then
             For Each PageItem In Page.Pages
                 If PageItem.Value IsNot Nothing Then
                     Try
                         PageItem.Value.ClearPageHeaderMemory()
                         PageItem.Value.Dispose()
+
                         If System.IO.File.Exists(PageItem.Value.FilePath) Then System.IO.File.Delete(PageItem.Value.FilePath)
                         If System.IO.File.Exists(PageItem.Value.PendingRemoveBlocksFilePath) Then System.IO.File.Delete(PageItem.Value.PendingRemoveBlocksFilePath)
                     Catch ex As Exception
@@ -422,13 +424,22 @@ Public Class WritePerformanceTest
                 Try
                     System.IO.File.Delete(FilePath)
                 Catch ex As Exception
+                    Console.WriteLine(ex.ToString)
                 End Try
             Next
         End If
 
         Page.Pages = New Concurrent.ConcurrentDictionary(Of Int64, Page)
 
-        'Console.WriteLine("Related resource cleared.")
+        'Init CurrentDataID, NextDataIDs
+        CurrentDataID = 0
+
+        NextDataIDs = New Concurrent.ConcurrentQueue(Of Int64)
+        For Each ID In RandomIDs
+            NextDataIDs.Enqueue(ID)
+        Next
+
+        'Console.WriteLine("Related resource clear and inited.")
     End Sub
 
 #End Region
@@ -437,11 +448,11 @@ Public Class WritePerformanceTest
 #Region "MD5"
 
     Private Shared MD5 As Security.Cryptography.MD5 = Security.Cryptography.MD5.Create
-    Private Shared Function GetBytesHash(ByRef FBytes() As Byte) As String
+    Public Shared Function GetBytesHash(ByRef FBytes() As Byte) As String
         Dim FStream As New System.IO.MemoryStream(FBytes)
         Return GetStreamHash(FStream)
     End Function
-    Private Shared Function GetStreamHash(ByRef FStream As System.IO.Stream) As String
+    Public Shared Function GetStreamHash(ByRef FStream As System.IO.Stream) As String
         Dim MD5Bytes() As Byte = MD5.ComputeHash(FStream)
 
         Dim MD5String As New System.Text.StringBuilder

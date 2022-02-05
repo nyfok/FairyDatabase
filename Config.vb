@@ -76,7 +76,7 @@
     ''' If True => Write to disk after WriteBufferFlushMSeconds or buffer size >= PageWriteBufferSize.
     ''' If False => Write immediately.
     ''' </summary>
-    Public Shared SupportWriteBuffer As Boolean = True   '
+    Public Shared SupportWriteBuffer As Boolean = True
 
     ''' <summary>
     ''' Write Buffer Wait MSeconds before auto flush

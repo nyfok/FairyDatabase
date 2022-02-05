@@ -120,17 +120,17 @@ Public Class Page
     Private FileStreamsStack As New Concurrent.ConcurrentStack(Of FileStream)
 
     Private Function GetOneFileStream() As FileStream
-        SyncLock FileStreamsLock
-            Dim FStream As FileStream
-            Do While FileStreamsStack.Count > 0
-                FileStreamsStack.TryPop(FStream)
-                If FStream Is Nothing Then
-                    If FileStreams.Contains(FStream) Then FileStreams.Remove(FStream)
-                Else
-                    Return FStream
-                End If
-            Loop
+        Dim FStream As FileStream
+        Do While FileStreamsStack.Count > 0
+            FileStreamsStack.TryPop(FStream)
+            If FStream Is Nothing Then
+                If FileStreams.Contains(FStream) Then FileStreams.Remove(FStream)
+            Else
+                Return FStream
+            End If
+        Loop
 
+        SyncLock FileStreamsLock
             Dim NewFileStream As FileStream = File.Open(FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
             FileStreams.Add(NewFileStream)
 
@@ -171,6 +171,7 @@ Public Class Page
                 Dim FStream As FileStream = FileStreams.ElementAt(I)
                 FStream.Flush()
             Catch ex As Exception
+                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         Next
     End Sub
@@ -189,6 +190,7 @@ Public Class Page
                     FStream = Nothing
                 End If
             Catch ex As Exception
+                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         Loop
 
@@ -425,6 +427,7 @@ Public Class Page
         LengthMutex.Release()
     End Sub
     Public Sub ClearPageHeaderMemory()
+        If PageHeaderMemory Is Nothing OrElse PageHeaderMemory.Size = 0 Then Return
         Dim FBytes(PageHeaderMemory.Size - 1) As Byte
         PageHeaderMemory.Write(FBytes)
     End Sub
@@ -770,6 +773,7 @@ Public Class Page
                 UpdateHeaderToFileTimer.Dispose()
                 UpdateHeaderToFileTimer = Nothing
             Catch ex As Exception
+                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
             Try
                 If Config.SupportPageHeaderBuffer Then
@@ -778,6 +782,7 @@ Public Class Page
                     UpdateLengthToFile()
                 End If
             Catch ex As Exception
+                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         End If
 
@@ -786,6 +791,7 @@ Public Class Page
             Try
                 PageFileBufferWriter.Flush()
             Catch ex As Exception
+                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         End If
 
@@ -814,6 +820,7 @@ Public Class Page
                     PageFileBufferWriter.Dispose()
                     PageFileBufferWriter = Nothing
                 Catch ex As Exception
+                    If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
                 End Try
             End If
 
@@ -882,14 +889,17 @@ Public Class Page
         Dim PageID As Int64 = GetPageID(DataID)
 
         'Get Page
-        If Pages.ContainsKey(PageID) = False Then
-            SyncLock CreatePageLock
-                Pages.TryAdd(PageID, New Page(PageID))
-            End SyncLock
-        End If
+        If Pages.ContainsKey(PageID) Then Return Pages(PageID)
 
-        'Return Value
-        Return Pages(PageID)
+        SyncLock CreatePageLock
+            If Pages.ContainsKey(PageID) Then Return Pages(PageID)
+
+            Dim FPage As New Page(PageID)
+            Pages.TryAdd(PageID, FPage)
+
+            Return FPage
+        End SyncLock
+
     End Function
 
     Public Shared Function GetPageFilePath(ByVal PageID As Int64) As String
