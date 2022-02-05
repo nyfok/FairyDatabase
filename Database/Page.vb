@@ -103,13 +103,23 @@ Public Class Page
     Public ReadOnly Property FileLength As Int64
         Get
             If File.Exists(FilePath) Then
-                Return New System.IO.FileInfo(FilePath).Length
+                theCachedFileLength = New System.IO.FileInfo(FilePath).Length
+                CachedFileLengthLastUpdateTime = Now
+                Return theCachedFileLength
             Else
                 Return -1
             End If
         End Get
     End Property
 
+    Private Shared theCachedFileLength As Int64 = -1
+    Private Shared CachedFileLengthLastUpdateTime As DateTime
+    Public ReadOnly Property CachedFileLength As Int64
+        Get
+            If theCachedFileLength >= 0 AndAlso Now.Subtract(CachedFileLengthLastUpdateTime).TotalMilliseconds < 500 Then Return theCachedFileLength
+            Return FileLength
+        End Get
+    End Property
 
 #End Region
 
@@ -595,8 +605,10 @@ Public Class Page
             'Make sure file length enough
             If FData.Length > 0 Then
                 Dim EndLength As Int64 = FData.StartPOS + FData.Length
-                If FileLength < EndLength Then
-                    FStream.SetLength(FileLength + Config.DatabasePageFileInitSize)  'use to fast create file
+                If CachedFileLength < EndLength Then
+                    If FileLength < EndLength Then
+                        FStream.SetLength(FileLength + Config.DatabasePageFileInitSize)  'use to fast expend file
+                    End If
                 End If
             End If
 
@@ -708,7 +720,8 @@ Public Class Page
                 If FData.StartPOS > 0 AndAlso FData.Length > 0 Then
                     'Make sure file length enough
                     Dim EndLength As Int64 = FData.StartPOS + FData.Length
-                    If FileLength < EndLength Then
+
+                    If CachedFileLength < EndLength Then
                         'not enough length, not read bytes
                     Else
                         'Execute Read

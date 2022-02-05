@@ -1,17 +1,18 @@
 ﻿Imports FairyDatabase
+
 Public Class ReadPerformanceTest
 
     Private Shared ReadNumber As Int64 = 49999
     Private Shared ByteSize As Int64 = 100
+    Private Shared IfVerifyData As Boolean = False
 
     Private Shared SampleBytes(ByteSize - 1) As Byte
     Private Shared SampleBytesHash As String
-    Private Shared IfVerifyData As Boolean
 
     Public Shared Sub Start()
         'Write Log
         Console.WindowWidth = 150
-        Console.WriteLine("Test: ByteSize=" & ByteSize & ", TestNumber=" & ReadNumber)
+        Console.WriteLine("Read Performance Test: TestNumber=" & ReadNumber & ", ByteSize=" & ByteSize & ", IfVerifyData=" & IfVerifyData)
         Console.WriteLine()
 
         'Init FairyDatabase Config
@@ -21,37 +22,58 @@ Public Class ReadPerformanceTest
         'Init RandomIDs
         Randomize()
         PrepareRandomIDs()
-        IfVerifyData = False
 
         'Prepare Test Data
         PrepareTestData()
 
-        'Test Single Thread
-        Console.WriteLine("Processing Single Thread Test...")
-        For TestNumber = 1 To 2
-            For Each IfRandomRead In New Boolean() {False, True}
-                TestReadFilesInSingleThread(IfRandomRead)
-                TestReadInSingleThread(IfRandomRead)
-            Next
-
+        'Execute Test
+        Do While True
+            Console.WriteLine("Start to test read performance.")
             Console.WriteLine()
-        Next
-        Console.ReadLine()
 
-        'Test Multiple Threads
-        For Each ThreadNumber In New Integer() {2, 4, 8, 16, 32, 64, 128}
-            Console.WriteLine("Processing Multiple Threads Test...")
-
-            For TestNumber = 1 To 2
-                For Each IfRandomRead In New Boolean() {False, True}
-                    TestReadFilesInMultipleThreads(ThreadNumber, IfRandomRead)
-                    TestReadInMultipleThreads(ThreadNumber, IfRandomRead)
-                Next
+            For Each ThreadNumber In New Integer() {1, 2, 4, 8, 16, 32, 64, 128, 256}
+                Console.WriteLine("-------------------------------------------------------------------------------------")
                 Console.WriteLine()
+
+                For Each IfRandomRead In New Boolean() {False, True}
+                    If IfRandomRead Then
+                        Console.WriteLine("Start to test RANDOM read performance via " & ThreadNumber & " threads.")
+                    Else
+                        Console.WriteLine("Start to test SEQUENCY read performance via " & ThreadNumber & " threads.")
+                    End If
+                    Console.WriteLine()
+
+                    If ThreadNumber = 1 Then
+                        For J = 1 To 5
+                            TestReadFilesInSingleThread(IfRandomRead)
+                        Next
+                        Console.WriteLine()
+
+                        For J = 1 To 5
+                            TestReadInSingleThread(IfRandomRead)
+                        Next
+                        Console.WriteLine()
+                    Else
+                        For J = 1 To 5
+                            TestReadFilesInMultipleThreads(ThreadNumber, IfRandomRead)
+                        Next
+                        Console.WriteLine()
+
+                        For J = 1 To 5
+                            TestReadInMultipleThreads(ThreadNumber, IfRandomRead)
+                        Next
+                        Console.WriteLine()
+                    End If
+                Next
+
             Next
 
-            Console.ReadLine()
-        Next
+            Console.WriteLine("======================================================================================")
+            Console.WriteLine()
+            Console.WriteLine("Press any key to start a new test. (Press ""q"" for exit)")
+            Dim Input As String = Console.ReadLine()
+            If Input.Trim.ToLower = "q" Then Exit Do
+        Loop
 
     End Sub
 
@@ -61,7 +83,7 @@ Public Class ReadPerformanceTest
 
     Private Shared Sub TestReadFilesInSingleThread(ByVal IfRandomRead As Boolean)
         'Clear and Init Resources
-        ClearAndInitResources()
+        ClearAndInitResources(IfRandomRead)
 
         'Init Parameters
         Dim FilePath As String
@@ -93,13 +115,13 @@ Public Class ReadPerformanceTest
             ReadWayString = "Sequency"
         End If
 
-        Dim LogString = ReadWayString & " read files via single thread using " & MSeconds & "ms.                                                        "
+        Dim LogString = ReadWayString & " read FILES via single thread using " & MSeconds & "ms.                                                        "
         Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & " Copy/s, ReadSpeed=" & ReadSpeed & " MB/s)")
     End Sub
 
     Private Shared Sub TestReadFilesInMultipleThreads(ByVal ThreadNumber As Integer, ByVal IfRandomRead As Boolean)
         'Clear and Init Resources
-        ClearAndInitResources()
+        ClearAndInitResources(IfRandomRead)
 
         'Init Parameters
         ReDim ManualResetEvents(ThreadNumber - 1)
@@ -134,7 +156,7 @@ Public Class ReadPerformanceTest
             ReadWayString = "Sequency"
         End If
 
-        Dim LogString As String = ReadWayString & " read files via " & ThreadNumber & " Threads using " & MSeconds & "ms.                                 "
+        Dim LogString As String = ReadWayString & " read FILES via " & ThreadNumber & " Threads using " & MSeconds & "ms.                                 "
         Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & " Copy/s, ReadSpeed=" & ReadSpeed & " MB/s)")
     End Sub
 
@@ -166,7 +188,7 @@ Public Class ReadPerformanceTest
 
     Private Shared Sub TestReadInSingleThread(ByVal IfRandomRead As Boolean)
         'Clear and Init Resources
-        ClearAndInitResources()
+        ClearAndInitResources(IfRandomRead)
 
         'Init Parameters
         Dim StartTime As DateTime = Now
@@ -196,7 +218,7 @@ Public Class ReadPerformanceTest
             ReadWayString = "Sequency"
         End If
 
-        Dim LogString As String = ReadWayString & " read db via single thread using " & MSeconds & "ms.                                                "
+        Dim LogString As String = ReadWayString & " read DB via single thread using " & MSeconds & "ms.                                                "
         Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & " Copy/s, ReadSpeed=" & ReadSpeed & " MB/s)")
 
         If IfVerifyData Then
@@ -209,7 +231,7 @@ Public Class ReadPerformanceTest
     Private Shared TestReadInMultipleThreads_IfRandomRead As Boolean
     Private Shared Sub TestReadInMultipleThreads(ByVal ThreadNumber As Integer, ByVal IfRandomRead As Boolean)
         'Clear and Init Resources
-        ClearAndInitResources()
+        ClearAndInitResources(IfRandomRead)
 
         'Init Parameters
         ReDim ManualResetEvents(ThreadNumber - 1)
@@ -244,7 +266,7 @@ Public Class ReadPerformanceTest
             ReadWayString = "Sequency"
         End If
 
-        Dim LogString As String = ReadWayString & " read db via " & ThreadNumber & " Threads using " & MSeconds & "ms.                               "
+        Dim LogString As String = ReadWayString & " read DB via " & ThreadNumber & " Threads using " & MSeconds & "ms.                               "
         Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & ReadNumber & ", ReadCopySpeed=" & ReadCopySpeed & " Copy/s, ReadSpeed=" & ReadSpeed & " MB/s)")
 
         If IfVerifyData Then
@@ -385,18 +407,13 @@ Public Class ReadPerformanceTest
 
     Private Shared Function GetNextDataID(ByVal IfRandomRead As Boolean) As Int64
 
-        If IfRandomRead = False Then
-            Dim DataID As Int64 = System.Threading.Interlocked.Increment(CurrentDataID)
-            If DataID > ReadNumber Then Return 0
+        Dim DataID As Int64
+        If NextDataIDs.TryDequeue(DataID) Then
             Return DataID
         Else
-            Dim DataID As Int64
-            If NextDataIDs.TryDequeue(DataID) Then
-                Return DataID
-            Else
-                Return 0
-            End If
+            Return 0
         End If
+
     End Function
 
 #End Region
@@ -458,7 +475,7 @@ Public Class ReadPerformanceTest
     End Sub
 
 
-    Private Shared Sub ClearAndInitResources()
+    Private Shared Sub ClearAndInitResources(Optional ByVal IfRandomRead As Boolean = True)
         'Clear Page Files and Memory
         If Page.Pages IsNot Nothing Then
             For Each PageItem In Page.Pages
@@ -473,15 +490,33 @@ Public Class ReadPerformanceTest
             Next
         End If
 
+        If System.IO.Directory.Exists(Config.DatabaseFolderPath) Then
+            For Each FilePath In System.IO.Directory.GetFiles(Config.DatabaseFolderPath, "*.fdb", System.IO.SearchOption.AllDirectories)
+                Try
+                    System.IO.File.Delete(FilePath)
+                Catch ex As Exception
+                    Console.WriteLine(ex.ToString)
+                End Try
+            Next
+        End If
+
         Page.Pages = New Concurrent.ConcurrentDictionary(Of Int64, Page)
 
         'Init CurrentDataID, NextDataIDs
         CurrentDataID = 0
 
-        NextDataIDs = New Concurrent.ConcurrentQueue(Of Int64)
-        For Each ID In RandomIDs
-            NextDataIDs.Enqueue(ID)
-        Next
+        If IfRandomRead Then
+            NextDataIDs = New Concurrent.ConcurrentQueue(Of Int64)
+            For Each ID In RandomIDs
+                NextDataIDs.Enqueue(ID)
+            Next
+        Else
+            NextDataIDs = New Concurrent.ConcurrentQueue(Of Int64)
+            For ID = 1 To ReadNumber
+                NextDataIDs.Enqueue(ID)
+            Next
+        End If
+
 
         'Init ReadSamples
         ReadSamples = New Concurrent.ConcurrentQueue(Of Data)

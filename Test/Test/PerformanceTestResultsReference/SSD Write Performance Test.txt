@@ -1,0 +1,224 @@
+Program start.
+Write Performance Test: TestNumber=9999, ByteSize=100, IfVerifyData=False
+
+Start to test write performance.
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY write performance via 1 threads.
+
+Write FILES via single thread using 1721.8317ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=5807 Copy/s, WriteSpeed=0.553 MB/s)
+Write FILES via single thread using 1796.4507ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=5565 Copy/s, WriteSpeed=0.53 MB/s)
+Write FILES via single thread using 1655.4586ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=6040 Copy/s, WriteSpeed=0.576 MB/s)
+Write FILES via single thread using 1796.7801ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=5564 Copy/s, WriteSpeed=0.53 MB/s)
+Write FILES via single thread using 1575.9148ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=6344 Copy/s, WriteSpeed=0.605 MB/s)
+
+Sequency write DB via single thread using 87.5706ms.        (ByteSize=100, Copies=9999, WriteCopySpeed=114182 Copy/s, WriteSpeed=10.889 MB/s)
+Sequency write DB via single thread using 53.3551ms.        (ByteSize=100, Copies=9999, WriteCopySpeed=187404 Copy/s, WriteSpeed=17.872 MB/s)
+Sequency write DB via single thread using 53.7355ms.        (ByteSize=100, Copies=9999, WriteCopySpeed=186078 Copy/s, WriteSpeed=17.745 MB/s)
+Sequency write DB via single thread using 52.9532ms.        (ByteSize=100, Copies=9999, WriteCopySpeed=188827 Copy/s, WriteSpeed=18.007 MB/s)
+Sequency write DB via single thread using 48.8342ms.        (ByteSize=100, Copies=9999, WriteCopySpeed=204754 Copy/s, WriteSpeed=19.526 MB/s)
+
+Start to test RANDOM write performance via 1 threads.
+
+Random write DB via single thread using 48.3746ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=206699 Copy/s, WriteSpeed=19.712 MB/s)
+Random write DB via single thread using 46.8058ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=213627 Copy/s, WriteSpeed=20.373 MB/s)
+Random write DB via single thread using 48.9747ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=204166 Copy/s, WriteSpeed=19.47 MB/s)
+Random write DB via single thread using 49.3285ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=202702 Copy/s, WriteSpeed=19.331 MB/s)
+Random write DB via single thread using 48.0268ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=208196 Copy/s, WriteSpeed=19.855 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY write performance via 2 threads.
+
+Write FILES via 2 threads using 1388.5413ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=7201 Copy/s, WriteSpeed=0.686 MB/s)
+Write FILES via 2 threads using 1529.4904ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=6537 Copy/s, WriteSpeed=0.623 MB/s)
+Write FILES via 2 threads using 1318.004ms.                 (ByteSize=100, Copies=9999, WriteCopySpeed=7586 Copy/s, WriteSpeed=0.723 MB/s)
+Write FILES via 2 threads using 1564.0759ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=6392 Copy/s, WriteSpeed=0.609 MB/s)
+Write FILES via 2 threads using 1375.8808ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=7267 Copy/s, WriteSpeed=0.693 MB/s)
+
+Sequency write DB via 2 threads using 61.819ms.             (ByteSize=100, Copies=9999, WriteCopySpeed=161746 Copy/s, WriteSpeed=15.425 MB/s)
+Sequency write DB via 2 threads using 100.1049ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=99885 Copy/s, WriteSpeed=9.525 MB/s)
+Sequency write DB via 2 threads using 71.0658ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=140700 Copy/s, WriteSpeed=13.418 MB/s)
+Sequency write DB via 2 threads using 73.9703ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=135175 Copy/s, WriteSpeed=12.891 MB/s)
+Sequency write DB via 2 threads using 76.4143ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=130852 Copy/s, WriteSpeed=12.479 MB/s)
+
+Start to test RANDOM write performance via 2 threads.
+
+Random write DB via 2 threads using 66.9345ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=149384 Copy/s, WriteSpeed=14.246 MB/s)
+Random write DB via 2 threads using 67.0192ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=149196 Copy/s, WriteSpeed=14.228 MB/s)
+Random write DB via 2 threads using 68.7371ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=145467 Copy/s, WriteSpeed=13.872 MB/s)
+Random write DB via 2 threads using 77.9022ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=128353 Copy/s, WriteSpeed=12.24 MB/s)
+Random write DB via 2 threads using 69.0991ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=144705 Copy/s, WriteSpeed=13.8 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY write performance via 4 threads.
+
+Write FILES via 4 threads using 1255.6567ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=7963 Copy/s, WriteSpeed=0.759 MB/s)
+Write FILES via 4 threads using 1187.1179ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=8422 Copy/s, WriteSpeed=0.803 MB/s)
+Write FILES via 4 threads using 1419.8223ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=7042 Copy/s, WriteSpeed=0.671 MB/s)
+Write FILES via 4 threads using 1191.7077ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=8390 Copy/s, WriteSpeed=0.8 MB/s)
+Write FILES via 4 threads using 1338.52ms.                  (ByteSize=100, Copies=9999, WriteCopySpeed=7470 Copy/s, WriteSpeed=0.712 MB/s)
+
+Sequency write DB via 4 threads using 100.0882ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=99901 Copy/s, WriteSpeed=9.527 MB/s)
+Sequency write DB via 4 threads using 79.2728ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=126134 Copy/s, WriteSpeed=12.029 MB/s)
+Sequency write DB via 4 threads using 211.648ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=47243 Copy/s, WriteSpeed=4.505 MB/s)
+Sequency write DB via 4 threads using 75.4527ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=132520 Copy/s, WriteSpeed=12.638 MB/s)
+Sequency write DB via 4 threads using 72.0078ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=138859 Copy/s, WriteSpeed=13.242 MB/s)
+
+Start to test RANDOM write performance via 4 threads.
+
+Random write DB via 4 threads using 71.7193ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=139418 Copy/s, WriteSpeed=13.295 MB/s)
+Random write DB via 4 threads using 89.5665ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=111637 Copy/s, WriteSpeed=10.646 MB/s)
+Random write DB via 4 threads using 80.0944ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=124840 Copy/s, WriteSpeed=11.905 MB/s)
+Random write DB via 4 threads using 85.7783ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=116567 Copy/s, WriteSpeed=11.116 MB/s)
+Random write DB via 4 threads using 86.5962ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=115466 Copy/s, WriteSpeed=11.011 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY write performance via 8 threads.
+
+Write FILES via 8 threads using 1217.448ms.                 (ByteSize=100, Copies=9999, WriteCopySpeed=8213 Copy/s, WriteSpeed=0.783 MB/s)
+Write FILES via 8 threads using 1380.1253ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=7244 Copy/s, WriteSpeed=0.69 MB/s)
+Write FILES via 8 threads using 1213.1308ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=8242 Copy/s, WriteSpeed=0.786 MB/s)
+Write FILES via 8 threads using 1398.4803ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=7149 Copy/s, WriteSpeed=0.681 MB/s)
+Write FILES via 8 threads using 1224.2982ms.                (ByteSize=100, Copies=9999, WriteCopySpeed=8167 Copy/s, WriteSpeed=0.778 MB/s)
+
+Sequency write DB via 8 threads using 83.0377ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=120415 Copy/s, WriteSpeed=11.483 MB/s)
+Sequency write DB via 8 threads using 71.08ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=140672 Copy/s, WriteSpeed=13.415 MB/s)
+Sequency write DB via 8 threads using 70.3488ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=142134 Copy/s, WriteSpeed=13.555 MB/s)
+Sequency write DB via 8 threads using 76.9283ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=129978 Copy/s, WriteSpeed=12.395 MB/s)
+Sequency write DB via 8 threads using 87.3363ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=114488 Copy/s, WriteSpeed=10.918 MB/s)
+
+Start to test RANDOM write performance via 8 threads.
+
+Random write DB via 8 threads using 150.1742ms.             (ByteSize=100, Copies=9999, WriteCopySpeed=66582 Copy/s, WriteSpeed=6.349 MB/s)
+Random write DB via 8 threads using 122.4281ms.             (ByteSize=100, Copies=9999, WriteCopySpeed=81672 Copy/s, WriteSpeed=7.788 MB/s)
+Random write DB via 8 threads using 121.373ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=82382 Copy/s, WriteSpeed=7.856 MB/s)
+Random write DB via 8 threads using 83.1448ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=120260 Copy/s, WriteSpeed=11.468 MB/s)
+Random write DB via 8 threads using 88.9469ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=112415 Copy/s, WriteSpeed=10.72 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY write performance via 16 threads.
+
+Write FILES via 16 threads using 1255.1129ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7966 Copy/s, WriteSpeed=0.759 MB/s)
+Write FILES via 16 threads using 1294.1964ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7726 Copy/s, WriteSpeed=0.736 MB/s)
+Write FILES via 16 threads using 1442.6537ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=6930 Copy/s, WriteSpeed=0.66 MB/s)
+Write FILES via 16 threads using 1249.6636ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=8001 Copy/s, WriteSpeed=0.763 MB/s)
+Write FILES via 16 threads using 1413.3192ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7074 Copy/s, WriteSpeed=0.674 MB/s)
+
+Sequency write DB via 16 threads using 246.8441ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=40507 Copy/s, WriteSpeed=3.863 MB/s)
+Sequency write DB via 16 threads using 137.277ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=72838 Copy/s, WriteSpeed=6.946 MB/s)
+Sequency write DB via 16 threads using 147.9288ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=67593 Copy/s, WriteSpeed=6.446 MB/s)
+Sequency write DB via 16 threads using 159.9435ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=62515 Copy/s, WriteSpeed=5.961 MB/s)
+Sequency write DB via 16 threads using 156.9972ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=63689 Copy/s, WriteSpeed=6.073 MB/s)
+
+Start to test RANDOM write performance via 16 threads.
+
+Random write DB via 16 threads using 149.8914ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=66708 Copy/s, WriteSpeed=6.361 MB/s)
+Random write DB via 16 threads using 193.2154ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=51750 Copy/s, WriteSpeed=4.935 MB/s)
+Random write DB via 16 threads using 141.8434ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=70493 Copy/s, WriteSpeed=6.722 MB/s)
+Random write DB via 16 threads using 135.2197ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=73946 Copy/s, WriteSpeed=7.052 MB/s)
+Random write DB via 16 threads using 151.0263ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=66207 Copy/s, WriteSpeed=6.313 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY write performance via 32 threads.
+
+Write FILES via 32 threads using 1269.5195ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7876 Copy/s, WriteSpeed=0.751 MB/s)
+Write FILES via 32 threads using 1337.0818ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7478 Copy/s, WriteSpeed=0.713 MB/s)
+Write FILES via 32 threads using 1265.0566ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7903 Copy/s, WriteSpeed=0.753 MB/s)
+Write FILES via 32 threads using 1337.7284ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7474 Copy/s, WriteSpeed=0.712 MB/s)
+Write FILES via 32 threads using 1256.3941ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7958 Copy/s, WriteSpeed=0.758 MB/s)
+
+Sequency write DB via 32 threads using 124.2563ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=80470 Copy/s, WriteSpeed=7.674 MB/s)
+Sequency write DB via 32 threads using 162.0818ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=61691 Copy/s, WriteSpeed=5.883 MB/s)
+Sequency write DB via 32 threads using 146.6928ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=68162 Copy/s, WriteSpeed=6.5 MB/s)
+Sequency write DB via 32 threads using 164.2386ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=60880 Copy/s, WriteSpeed=5.806 MB/s)
+Sequency write DB via 32 threads using 169.343ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=59045 Copy/s, WriteSpeed=5.631 MB/s)
+
+Start to test RANDOM write performance via 32 threads.
+
+Random write DB via 32 threads using 154.4697ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=64731 Copy/s, WriteSpeed=6.173 MB/s)
+Random write DB via 32 threads using 146.7492ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=68136 Copy/s, WriteSpeed=6.498 MB/s)
+Random write DB via 32 threads using 157.6836ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=63411 Copy/s, WriteSpeed=6.047 MB/s)
+Random write DB via 32 threads using 145.9528ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=68508 Copy/s, WriteSpeed=6.533 MB/s)
+Random write DB via 32 threads using 115.5582ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=86527 Copy/s, WriteSpeed=8.251 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY write performance via 64 threads.
+
+Write FILES via 64 threads using 1294.5804ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7723 Copy/s, WriteSpeed=0.736 MB/s)
+Write FILES via 64 threads using 1321.8907ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7564 Copy/s, WriteSpeed=0.721 MB/s)
+Write FILES via 64 threads using 1269.6221ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7875 Copy/s, WriteSpeed=0.751 MB/s)
+Write FILES via 64 threads using 1333.0642ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7500 Copy/s, WriteSpeed=0.715 MB/s)
+Write FILES via 64 threads using 1596.3145ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=6263 Copy/s, WriteSpeed=0.597 MB/s)
+
+Sequency write DB via 64 threads using 168.7566ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=59251 Copy/s, WriteSpeed=5.65 MB/s)
+Sequency write DB via 64 threads using 138.8055ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=72036 Copy/s, WriteSpeed=6.869 MB/s)
+Sequency write DB via 64 threads using 132.1722ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=75651 Copy/s, WriteSpeed=7.214 MB/s)
+Sequency write DB via 64 threads using 158.6522ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=63024 Copy/s, WriteSpeed=6.01 MB/s)
+Sequency write DB via 64 threads using 160.8731ms.          (ByteSize=100, Copies=9999, WriteCopySpeed=62154 Copy/s, WriteSpeed=5.927 MB/s)
+
+Start to test RANDOM write performance via 64 threads.
+
+Random write DB via 64 threads using 186.9382ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=53488 Copy/s, WriteSpeed=5.101 MB/s)
+Random write DB via 64 threads using 191.0037ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=52349 Copy/s, WriteSpeed=4.992 MB/s)
+Random write DB via 64 threads using 156.4657ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=63905 Copy/s, WriteSpeed=6.094 MB/s)
+Random write DB via 64 threads using 159.5985ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=62650 Copy/s, WriteSpeed=5.974 MB/s)
+Random write DB via 64 threads using 224.5768ms.            (ByteSize=100, Copies=9999, WriteCopySpeed=44523 Copy/s, WriteSpeed=4.246 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY write performance via 128 threads.
+
+Write FILES via 128 threads using 1296.1393ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=7714 Copy/s, WriteSpeed=0.735 MB/s)
+Write FILES via 128 threads using 1225.0976ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=8161 Copy/s, WriteSpeed=0.778 MB/s)
+Write FILES via 128 threads using 1274.7771ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=7843 Copy/s, WriteSpeed=0.748 MB/s)
+Write FILES via 128 threads using 1354.083ms.               (ByteSize=100, Copies=9999, WriteCopySpeed=7384 Copy/s, WriteSpeed=0.704 MB/s)
+Write FILES via 128 threads using 1247.0437ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=8018 Copy/s, WriteSpeed=0.764 MB/s)
+
+Sequency write DB via 128 threads using 147.7923ms.         (ByteSize=100, Copies=9999, WriteCopySpeed=67655 Copy/s, WriteSpeed=6.452 MB/s)
+Sequency write DB via 128 threads using 122.7157ms.         (ByteSize=100, Copies=9999, WriteCopySpeed=81481 Copy/s, WriteSpeed=7.77 MB/s)
+Sequency write DB via 128 threads using 187.6187ms.         (ByteSize=100, Copies=9999, WriteCopySpeed=53294 Copy/s, WriteSpeed=5.082 MB/s)
+Sequency write DB via 128 threads using 177.4838ms.         (ByteSize=100, Copies=9999, WriteCopySpeed=56337 Copy/s, WriteSpeed=5.372 MB/s)
+Sequency write DB via 128 threads using 192.8155ms.         (ByteSize=100, Copies=9999, WriteCopySpeed=51857 Copy/s, WriteSpeed=4.945 MB/s)
+
+Start to test RANDOM write performance via 128 threads.
+
+Random write DB via 128 threads using 188.9678ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=52913 Copy/s, WriteSpeed=5.046 MB/s)
+Random write DB via 128 threads using 193.1652ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=51763 Copy/s, WriteSpeed=4.936 MB/s)
+Random write DB via 128 threads using 187.7688ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=53251 Copy/s, WriteSpeed=5.078 MB/s)
+Random write DB via 128 threads using 187.5197ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=53322 Copy/s, WriteSpeed=5.085 MB/s)
+Random write DB via 128 threads using 179.1317ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=55819 Copy/s, WriteSpeed=5.323 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY write performance via 256 threads.
+
+Write FILES via 256 threads using 1190.5561ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=8398 Copy/s, WriteSpeed=0.8 MB/s)
+Write FILES via 256 threads using 1288.8724ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=7757 Copy/s, WriteSpeed=0.739 MB/s)
+Write FILES via 256 threads using 1267.2984ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=7890 Copy/s, WriteSpeed=0.752 MB/s)
+Write FILES via 256 threads using 1313.5043ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=7612 Copy/s, WriteSpeed=0.725 MB/s)
+Write FILES via 256 threads using 1231.3488ms.              (ByteSize=100, Copies=9999, WriteCopySpeed=8120 Copy/s, WriteSpeed=0.774 MB/s)
+
+Sequency write DB via 256 threads using 200.5438ms.         (ByteSize=100, Copies=9999, WriteCopySpeed=49859 Copy/s, WriteSpeed=4.754 MB/s)
+Sequency write DB via 256 threads using 172.6002ms.         (ByteSize=100, Copies=9999, WriteCopySpeed=57931 Copy/s, WriteSpeed=5.524 MB/s)
+Sequency write DB via 256 threads using 212.1538ms.         (ByteSize=100, Copies=9999, WriteCopySpeed=47130 Copy/s, WriteSpeed=4.494 MB/s)
+Sequency write DB via 256 threads using 179.8732ms.         (ByteSize=100, Copies=9999, WriteCopySpeed=55589 Copy/s, WriteSpeed=5.301 MB/s)
+Sequency write DB via 256 threads using 148.1956ms.         (ByteSize=100, Copies=9999, WriteCopySpeed=67471 Copy/s, WriteSpeed=6.434 MB/s)
+
+Start to test RANDOM write performance via 256 threads.
+
+Random write DB via 256 threads using 164.1954ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=60896 Copy/s, WriteSpeed=5.807 MB/s)
+Random write DB via 256 threads using 149.3737ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=66939 Copy/s, WriteSpeed=6.383 MB/s)
+Random write DB via 256 threads using 186.3647ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=53652 Copy/s, WriteSpeed=5.116 MB/s)
+Random write DB via 256 threads using 232.8464ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=42942 Copy/s, WriteSpeed=4.095 MB/s)
+Random write DB via 256 threads using 183.8275ms.           (ByteSize=100, Copies=9999, WriteCopySpeed=54393 Copy/s, WriteSpeed=5.187 MB/s)
+
+======================================================================================
+
+Press any key to start a new test. (Press "q" for exit)

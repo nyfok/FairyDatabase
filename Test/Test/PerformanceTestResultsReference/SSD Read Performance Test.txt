@@ -1,0 +1,282 @@
+Program start.
+Read Performance Test: TestNumber=49999, ByteSize=100, IfVerifyData=False
+
+Preparing Test Data...
+Preparing Test Files...
+Test Data and Files are all get prepared.
+
+Start to test read performance.
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY read performance via 1 threads.
+
+Sequency read FILES via single thread using 1495.4403ms.    (ByteSize=100, Copies=49999, ReadCopySpeed=33434 Copy/s, ReadSpeed=3.188 MB/s)
+Sequency read FILES via single thread using 1367.5705ms.    (ByteSize=100, Copies=49999, ReadCopySpeed=36560 Copy/s, ReadSpeed=3.486 MB/s)
+Sequency read FILES via single thread using 1360.5894ms.    (ByteSize=100, Copies=49999, ReadCopySpeed=36748 Copy/s, ReadSpeed=3.504 MB/s)
+Sequency read FILES via single thread using 1407.5275ms.    (ByteSize=100, Copies=49999, ReadCopySpeed=35522 Copy/s, ReadSpeed=3.387 MB/s)
+Sequency read FILES via single thread using 1481.4132ms.    (ByteSize=100, Copies=49999, ReadCopySpeed=33750 Copy/s, ReadSpeed=3.218 MB/s)
+
+Sequency read DB via single thread using 45.6647ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=1094915 Copy/s, ReadSpeed=104.419 MB/s)
+Sequency read DB via single thread using 43.2657ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=1155626 Copy/s, ReadSpeed=110.209 MB/s)
+Sequency read DB via single thread using 44.7477ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=1117353 Copy/s, ReadSpeed=106.559 MB/s)
+Sequency read DB via single thread using 45.3086ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=1103521 Copy/s, ReadSpeed=105.239 MB/s)
+Sequency read DB via single thread using 45.8344ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=1090861 Copy/s, ReadSpeed=104.032 MB/s)
+
+Start to test RANDOM read performance via 1 threads.
+
+Random read FILES via single thread using 1413.2021ms.      (ByteSize=100, Copies=49999, ReadCopySpeed=35379 Copy/s, ReadSpeed=3.374 MB/s)
+Random read FILES via single thread using 1337.7583ms.      (ByteSize=100, Copies=49999, ReadCopySpeed=37375 Copy/s, ReadSpeed=3.564 MB/s)
+Random read FILES via single thread using 1360.6251ms.      (ByteSize=100, Copies=49999, ReadCopySpeed=36747 Copy/s, ReadSpeed=3.504 MB/s)
+Random read FILES via single thread using 1335.0781ms.      (ByteSize=100, Copies=49999, ReadCopySpeed=37450 Copy/s, ReadSpeed=3.571 MB/s)
+Random read FILES via single thread using 1341.9737ms.      (ByteSize=100, Copies=49999, ReadCopySpeed=37257 Copy/s, ReadSpeed=3.553 MB/s)
+
+Random read DB via single thread using 51.1906ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=976722 Copy/s, ReadSpeed=93.147 MB/s)
+Random read DB via single thread using 43.3953ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=1152175 Copy/s, ReadSpeed=109.88 MB/s)
+Random read DB via single thread using 44.101ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1133738 Copy/s, ReadSpeed=108.121 MB/s)
+Random read DB via single thread using 42.6015ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=1173644 Copy/s, ReadSpeed=111.927 MB/s)
+Random read DB via single thread using 41.9676ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=1191371 Copy/s, ReadSpeed=113.618 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY read performance via 2 threads.
+
+Sequency read FILES via 2 Threads using 785.8713ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=63622 Copy/s, ReadSpeed=6.067 MB/s)
+Sequency read FILES via 2 Threads using 874.7632ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=57157 Copy/s, ReadSpeed=5.45 MB/s)
+Sequency read FILES via 2 Threads using 794.2593ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=62950 Copy/s, ReadSpeed=6.003 MB/s)
+Sequency read FILES via 2 Threads using 737.5257ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=67792 Copy/s, ReadSpeed=6.465 MB/s)
+Sequency read FILES via 2 Threads using 797.2644ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=62713 Copy/s, ReadSpeed=5.98 MB/s)
+
+Sequency read DB via 2 Threads using 52.7713ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=947465 Copy/s, ReadSpeed=90.357 MB/s)
+Sequency read DB via 2 Threads using 44.1684ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1132008 Copy/s, ReadSpeed=107.956 MB/s)
+Sequency read DB via 2 Threads using 41.5107ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1204484 Copy/s, ReadSpeed=114.868 MB/s)
+Sequency read DB via 2 Threads using 40.9469ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1221069 Copy/s, ReadSpeed=116.45 MB/s)
+Sequency read DB via 2 Threads using 42.814ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1167818 Copy/s, ReadSpeed=111.371 MB/s)
+
+Start to test RANDOM read performance via 2 threads.
+
+Random read FILES via 2 Threads using 814.9763ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=61350 Copy/s, ReadSpeed=5.85 MB/s)
+Random read FILES via 2 Threads using 741.106ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=67465 Copy/s, ReadSpeed=6.434 MB/s)
+Random read FILES via 2 Threads using 780.7112ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=64042 Copy/s, ReadSpeed=6.107 MB/s)
+Random read FILES via 2 Threads using 723.2628ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=69129 Copy/s, ReadSpeed=6.592 MB/s)
+Random read FILES via 2 Threads using 759.9256ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=65794 Copy/s, ReadSpeed=6.274 MB/s)
+
+Random read DB via 2 Threads using 56.3315ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=887585 Copy/s, ReadSpeed=84.646 MB/s)
+Random read DB via 2 Threads using 40.9064ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=1222278 Copy/s, ReadSpeed=116.565 MB/s)
+Random read DB via 2 Threads using 38.76ms.                 (ByteSize=100, Copies=49999, ReadCopySpeed=1289963 Copy/s, ReadSpeed=123.02 MB/s)
+Random read DB via 2 Threads using 37.7353ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=1324992 Copy/s, ReadSpeed=126.361 MB/s)
+Random read DB via 2 Threads using 39.3177ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=1271666 Copy/s, ReadSpeed=121.275 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY read performance via 4 threads.
+
+Sequency read FILES via 4 Threads using 423.9374ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=117939 Copy/s, ReadSpeed=11.247 MB/s)
+Sequency read FILES via 4 Threads using 464.6137ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=107614 Copy/s, ReadSpeed=10.262 MB/s)
+Sequency read FILES via 4 Threads using 523.9562ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=95425 Copy/s, ReadSpeed=9.1 MB/s)
+Sequency read FILES via 4 Threads using 401.2501ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=124608 Copy/s, ReadSpeed=11.883 MB/s)
+Sequency read FILES via 4 Threads using 449.6961ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=111183 Copy/s, ReadSpeed=10.603 MB/s)
+
+Sequency read DB via 4 Threads using 52.6062ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=950439 Copy/s, ReadSpeed=90.64 MB/s)
+Sequency read DB via 4 Threads using 46.4465ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1076485 Copy/s, ReadSpeed=102.661 MB/s)
+Sequency read DB via 4 Threads using 47.6199ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1049960 Copy/s, ReadSpeed=100.132 MB/s)
+Sequency read DB via 4 Threads using 41.7706ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1196990 Copy/s, ReadSpeed=114.153 MB/s)
+Sequency read DB via 4 Threads using 49.7112ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1005789 Copy/s, ReadSpeed=95.919 MB/s)
+
+Start to test RANDOM read performance via 4 threads.
+
+Random read FILES via 4 Threads using 406.2781ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=123065 Copy/s, ReadSpeed=11.736 MB/s)
+Random read FILES via 4 Threads using 398.3202ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=125524 Copy/s, ReadSpeed=11.97 MB/s)
+Random read FILES via 4 Threads using 485.5498ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=102973 Copy/s, ReadSpeed=9.82 MB/s)
+Random read FILES via 4 Threads using 463.1018ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=107965 Copy/s, ReadSpeed=10.296 MB/s)
+Random read FILES via 4 Threads using 412.6143ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=121176 Copy/s, ReadSpeed=11.556 MB/s)
+
+Random read DB via 4 Threads using 40.3929ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=1237816 Copy/s, ReadSpeed=118.047 MB/s)
+Random read DB via 4 Threads using 34.0826ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=1466994 Copy/s, ReadSpeed=139.903 MB/s)
+Random read DB via 4 Threads using 33.1946ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=1506238 Copy/s, ReadSpeed=143.646 MB/s)
+Random read DB via 4 Threads using 37.458ms.                (ByteSize=100, Copies=49999, ReadCopySpeed=1334801 Copy/s, ReadSpeed=127.296 MB/s)
+Random read DB via 4 Threads using 39.3305ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=1271252 Copy/s, ReadSpeed=121.236 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY read performance via 8 threads.
+
+Sequency read FILES via 8 Threads using 315.5008ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=158475 Copy/s, ReadSpeed=15.113 MB/s)
+Sequency read FILES via 8 Threads using 256.1168ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=195219 Copy/s, ReadSpeed=18.617 MB/s)
+Sequency read FILES via 8 Threads using 258.4733ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=193439 Copy/s, ReadSpeed=18.447 MB/s)
+Sequency read FILES via 8 Threads using 329.9566ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=151532 Copy/s, ReadSpeed=14.451 MB/s)
+Sequency read FILES via 8 Threads using 300.3974ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=166442 Copy/s, ReadSpeed=15.873 MB/s)
+
+Sequency read DB via 8 Threads using 47.3934ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1054978 Copy/s, ReadSpeed=100.61 MB/s)
+Sequency read DB via 8 Threads using 45.7091ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1093852 Copy/s, ReadSpeed=104.317 MB/s)
+Sequency read DB via 8 Threads using 43.3244ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1154060 Copy/s, ReadSpeed=110.059 MB/s)
+Sequency read DB via 8 Threads using 39.6974ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1259503 Copy/s, ReadSpeed=120.115 MB/s)
+Sequency read DB via 8 Threads using 40.1693ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1244706 Copy/s, ReadSpeed=118.704 MB/s)
+
+Start to test RANDOM read performance via 8 threads.
+
+Random read FILES via 8 Threads using 266.3972ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=187685 Copy/s, ReadSpeed=17.899 MB/s)
+Random read FILES via 8 Threads using 251.7708ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=198589 Copy/s, ReadSpeed=18.938 MB/s)
+Random read FILES via 8 Threads using 254.4649ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=196486 Copy/s, ReadSpeed=18.738 MB/s)
+Random read FILES via 8 Threads using 259.0551ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=193005 Copy/s, ReadSpeed=18.406 MB/s)
+Random read FILES via 8 Threads using 317.6009ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=157427 Copy/s, ReadSpeed=15.013 MB/s)
+
+Random read DB via 8 Threads using 37.4811ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=1333978 Copy/s, ReadSpeed=127.218 MB/s)
+Random read DB via 8 Threads using 32.185ms.                (ByteSize=100, Copies=49999, ReadCopySpeed=1553487 Copy/s, ReadSpeed=148.152 MB/s)
+Random read DB via 8 Threads using 31.5378ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=1585367 Copy/s, ReadSpeed=151.192 MB/s)
+Random read DB via 8 Threads using 36.217ms.                (ByteSize=100, Copies=49999, ReadCopySpeed=1380539 Copy/s, ReadSpeed=131.658 MB/s)
+Random read DB via 8 Threads using 33.3847ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=1497662 Copy/s, ReadSpeed=142.828 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY read performance via 16 threads.
+
+Sequency read FILES via 16 Threads using 242.4144ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=206254 Copy/s, ReadSpeed=19.669 MB/s)
+Sequency read FILES via 16 Threads using 208.6076ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=239679 Copy/s, ReadSpeed=22.857 MB/s)
+Sequency read FILES via 16 Threads using 320.2894ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=156105 Copy/s, ReadSpeed=14.887 MB/s)
+Sequency read FILES via 16 Threads using 241.0563ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=207416 Copy/s, ReadSpeed=19.78 MB/s)
+Sequency read FILES via 16 Threads using 243.4661ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=205363 Copy/s, ReadSpeed=19.584 MB/s)
+
+Sequency read DB via 16 Threads using 54.1966ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=922548 Copy/s, ReadSpeed=87.981 MB/s)
+Sequency read DB via 16 Threads using 52.2464ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=956984 Copy/s, ReadSpeed=91.265 MB/s)
+Sequency read DB via 16 Threads using 43.6705ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1144914 Copy/s, ReadSpeed=109.187 MB/s)
+Sequency read DB via 16 Threads using 43.1421ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1158937 Copy/s, ReadSpeed=110.524 MB/s)
+Sequency read DB via 16 Threads using 42.5485ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1175106 Copy/s, ReadSpeed=112.066 MB/s)
+
+Start to test RANDOM read performance via 16 threads.
+
+Random read FILES via 16 Threads using 247.9489ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=201650 Copy/s, ReadSpeed=19.23 MB/s)
+Random read FILES via 16 Threads using 222.9943ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=224216 Copy/s, ReadSpeed=21.382 MB/s)
+Random read FILES via 16 Threads using 209.7948ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=238323 Copy/s, ReadSpeed=22.728 MB/s)
+Random read FILES via 16 Threads using 238.8136ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=209364 Copy/s, ReadSpeed=19.966 MB/s)
+Random read FILES via 16 Threads using 329.7806ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=151612 Copy/s, ReadSpeed=14.458 MB/s)
+
+Random read DB via 16 Threads using 45.9926ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1087109 Copy/s, ReadSpeed=103.674 MB/s)
+Random read DB via 16 Threads using 36.2813ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1378092 Copy/s, ReadSpeed=131.425 MB/s)
+Random read DB via 16 Threads using 36.2843ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1377978 Copy/s, ReadSpeed=131.414 MB/s)
+Random read DB via 16 Threads using 35.2301ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1419212 Copy/s, ReadSpeed=135.346 MB/s)
+Random read DB via 16 Threads using 35.276ms.               (ByteSize=100, Copies=49999, ReadCopySpeed=1417365 Copy/s, ReadSpeed=135.17 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY read performance via 32 threads.
+
+Sequency read FILES via 32 Threads using 218.4238ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=228908 Copy/s, ReadSpeed=21.83 MB/s)
+Sequency read FILES via 32 Threads using 212.5568ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=235226 Copy/s, ReadSpeed=22.432 MB/s)
+Sequency read FILES via 32 Threads using 207.2036ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=241303 Copy/s, ReadSpeed=23.012 MB/s)
+Sequency read FILES via 32 Threads using 250.5527ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=199554 Copy/s, ReadSpeed=19.031 MB/s)
+Sequency read FILES via 32 Threads using 249.2401ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=200605 Copy/s, ReadSpeed=19.131 MB/s)
+
+Sequency read DB via 32 Threads using 44.3116ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1128350 Copy/s, ReadSpeed=107.607 MB/s)
+Sequency read DB via 32 Threads using 41.5434ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1203536 Copy/s, ReadSpeed=114.778 MB/s)
+Sequency read DB via 32 Threads using 47.6277ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1049788 Copy/s, ReadSpeed=100.115 MB/s)
+Sequency read DB via 32 Threads using 45.5589ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1097458 Copy/s, ReadSpeed=104.661 MB/s)
+Sequency read DB via 32 Threads using 52.4099ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=953999 Copy/s, ReadSpeed=90.98 MB/s)
+
+Start to test RANDOM read performance via 32 threads.
+
+Random read FILES via 32 Threads using 204.1524ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=244910 Copy/s, ReadSpeed=23.356 MB/s)
+Random read FILES via 32 Threads using 200.8751ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=248905 Copy/s, ReadSpeed=23.737 MB/s)
+Random read FILES via 32 Threads using 212.0005ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=235843 Copy/s, ReadSpeed=22.491 MB/s)
+Random read FILES via 32 Threads using 218.6973ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=228621 Copy/s, ReadSpeed=21.803 MB/s)
+Random read FILES via 32 Threads using 328.8458ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=152043 Copy/s, ReadSpeed=14.5 MB/s)
+
+Random read DB via 32 Threads using 59.4743ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=840682 Copy/s, ReadSpeed=80.173 MB/s)
+Random read DB via 32 Threads using 38.7353ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1290786 Copy/s, ReadSpeed=123.098 MB/s)
+Random read DB via 32 Threads using 38.8108ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1288275 Copy/s, ReadSpeed=122.859 MB/s)
+Random read DB via 32 Threads using 59.7153ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=837289 Copy/s, ReadSpeed=79.85 MB/s)
+Random read DB via 32 Threads using 37.4139ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1336374 Copy/s, ReadSpeed=127.446 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY read performance via 64 threads.
+
+Sequency read FILES via 64 Threads using 322.1681ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=155195 Copy/s, ReadSpeed=14.8 MB/s)
+Sequency read FILES via 64 Threads using 242.7238ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=205991 Copy/s, ReadSpeed=19.644 MB/s)
+Sequency read FILES via 64 Threads using 259.0977ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=192973 Copy/s, ReadSpeed=18.403 MB/s)
+Sequency read FILES via 64 Threads using 262.3857ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=190555 Copy/s, ReadSpeed=18.172 MB/s)
+Sequency read FILES via 64 Threads using 213.1138ms.        (ByteSize=100, Copies=49999, ReadCopySpeed=234611 Copy/s, ReadSpeed=22.374 MB/s)
+
+Sequency read DB via 64 Threads using 44.8403ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1115046 Copy/s, ReadSpeed=106.339 MB/s)
+Sequency read DB via 64 Threads using 46.5794ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1073414 Copy/s, ReadSpeed=102.368 MB/s)
+Sequency read DB via 64 Threads using 44.4392ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1125110 Copy/s, ReadSpeed=107.298 MB/s)
+Sequency read DB via 64 Threads using 45.4745ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1099495 Copy/s, ReadSpeed=104.856 MB/s)
+Sequency read DB via 64 Threads using 45.7102ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1093825 Copy/s, ReadSpeed=104.315 MB/s)
+
+Start to test RANDOM read performance via 64 threads.
+
+Random read FILES via 64 Threads using 201.8085ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=247754 Copy/s, ReadSpeed=23.627 MB/s)
+Random read FILES via 64 Threads using 200.5876ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=249262 Copy/s, ReadSpeed=23.771 MB/s)
+Random read FILES via 64 Threads using 211.3629ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=236555 Copy/s, ReadSpeed=22.559 MB/s)
+Random read FILES via 64 Threads using 255.3271ms.          (ByteSize=100, Copies=49999, ReadCopySpeed=195823 Copy/s, ReadSpeed=18.675 MB/s)
+Random read FILES via 64 Threads using 249.19ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=200646 Copy/s, ReadSpeed=19.135 MB/s)
+
+Random read DB via 64 Threads using 35.0545ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1426321 Copy/s, ReadSpeed=136.024 MB/s)
+Random read DB via 64 Threads using 32.5931ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1534036 Copy/s, ReadSpeed=146.297 MB/s)
+Random read DB via 64 Threads using 32.6034ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1533551 Copy/s, ReadSpeed=146.25 MB/s)
+Random read DB via 64 Threads using 39.2063ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1275279 Copy/s, ReadSpeed=121.62 MB/s)
+Random read DB via 64 Threads using 32.9563ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1517130 Copy/s, ReadSpeed=144.684 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY read performance via 128 threads.
+
+Sequency read FILES via 128 Threads using 277.5116ms.       (ByteSize=100, Copies=49999, ReadCopySpeed=180169 Copy/s, ReadSpeed=17.182 MB/s)
+Sequency read FILES via 128 Threads using 232.6186ms.       (ByteSize=100, Copies=49999, ReadCopySpeed=214939 Copy/s, ReadSpeed=20.498 MB/s)
+Sequency read FILES via 128 Threads using 223.0133ms.       (ByteSize=100, Copies=49999, ReadCopySpeed=224197 Copy/s, ReadSpeed=21.381 MB/s)
+Sequency read FILES via 128 Threads using 215.8512ms.       (ByteSize=100, Copies=49999, ReadCopySpeed=231636 Copy/s, ReadSpeed=22.09 MB/s)
+Sequency read FILES via 128 Threads using 224.1042ms.       (ByteSize=100, Copies=49999, ReadCopySpeed=223106 Copy/s, ReadSpeed=21.277 MB/s)
+
+Sequency read DB via 128 Threads using 49.4253ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=1011607 Copy/s, ReadSpeed=96.474 MB/s)
+Sequency read DB via 128 Threads using 46.838ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1067487 Copy/s, ReadSpeed=101.803 MB/s)
+Sequency read DB via 128 Threads using 43.0211ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=1162197 Copy/s, ReadSpeed=110.835 MB/s)
+Sequency read DB via 128 Threads using 41.3382ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=1209510 Copy/s, ReadSpeed=115.347 MB/s)
+Sequency read DB via 128 Threads using 41.5704ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=1202754 Copy/s, ReadSpeed=114.703 MB/s)
+
+Start to test RANDOM read performance via 128 threads.
+
+Random read FILES via 128 Threads using 216.3557ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=231096 Copy/s, ReadSpeed=22.039 MB/s)
+Random read FILES via 128 Threads using 218.5512ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=228774 Copy/s, ReadSpeed=21.817 MB/s)
+Random read FILES via 128 Threads using 246.1722ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=203105 Copy/s, ReadSpeed=19.369 MB/s)
+Random read FILES via 128 Threads using 264.5587ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=188990 Copy/s, ReadSpeed=18.023 MB/s)
+Random read FILES via 128 Threads using 305.3074ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=163766 Copy/s, ReadSpeed=15.617 MB/s)
+
+Random read DB via 128 Threads using 37.5499ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1331534 Copy/s, ReadSpeed=126.985 MB/s)
+Random read DB via 128 Threads using 34.6424ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1443289 Copy/s, ReadSpeed=137.642 MB/s)
+Random read DB via 128 Threads using 33.838ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1477599 Copy/s, ReadSpeed=140.914 MB/s)
+Random read DB via 128 Threads using 38.5656ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1296466 Copy/s, ReadSpeed=123.64 MB/s)
+Random read DB via 128 Threads using 34.4049ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1453252 Copy/s, ReadSpeed=138.592 MB/s)
+
+-------------------------------------------------------------------------------------
+
+Start to test SEQUENCY read performance via 256 threads.
+
+Sequency read FILES via 256 Threads using 207.2774ms.       (ByteSize=100, Copies=49999, ReadCopySpeed=241217 Copy/s, ReadSpeed=23.004 MB/s)
+Sequency read FILES via 256 Threads using 210.2568ms.       (ByteSize=100, Copies=49999, ReadCopySpeed=237799 Copy/s, ReadSpeed=22.678 MB/s)
+Sequency read FILES via 256 Threads using 241.1447ms.       (ByteSize=100, Copies=49999, ReadCopySpeed=207340 Copy/s, ReadSpeed=19.773 MB/s)
+Sequency read FILES via 256 Threads using 237.7172ms.       (ByteSize=100, Copies=49999, ReadCopySpeed=210329 Copy/s, ReadSpeed=20.058 MB/s)
+Sequency read FILES via 256 Threads using 237.2676ms.       (ByteSize=100, Copies=49999, ReadCopySpeed=210728 Copy/s, ReadSpeed=20.096 MB/s)
+
+Sequency read DB via 256 Threads using 45.5114ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=1098603 Copy/s, ReadSpeed=104.771 MB/s)
+Sequency read DB via 256 Threads using 42.5038ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=1176341 Copy/s, ReadSpeed=112.184 MB/s)
+Sequency read DB via 256 Threads using 40.1791ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=1244403 Copy/s, ReadSpeed=118.675 MB/s)
+Sequency read DB via 256 Threads using 49.8435ms.           (ByteSize=100, Copies=49999, ReadCopySpeed=1003119 Copy/s, ReadSpeed=95.664 MB/s)
+Sequency read DB via 256 Threads using 41.653ms.            (ByteSize=100, Copies=49999, ReadCopySpeed=1200369 Copy/s, ReadSpeed=114.476 MB/s)
+
+Start to test RANDOM read performance via 256 threads.
+
+Random read FILES via 256 Threads using 245.5307ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=203636 Copy/s, ReadSpeed=19.42 MB/s)
+Random read FILES via 256 Threads using 221.3148ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=225918 Copy/s, ReadSpeed=21.545 MB/s)
+Random read FILES via 256 Threads using 218.8521ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=228460 Copy/s, ReadSpeed=21.787 MB/s)
+Random read FILES via 256 Threads using 202.1596ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=247324 Copy/s, ReadSpeed=23.586 MB/s)
+Random read FILES via 256 Threads using 314.5651ms.         (ByteSize=100, Copies=49999, ReadCopySpeed=158946 Copy/s, ReadSpeed=15.158 MB/s)
+
+Random read DB via 256 Threads using 51.4513ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=971773 Copy/s, ReadSpeed=92.675 MB/s)
+Random read DB via 256 Threads using 37.3161ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1339877 Copy/s, ReadSpeed=127.78 MB/s)
+Random read DB via 256 Threads using 36.302ms.              (ByteSize=100, Copies=49999, ReadCopySpeed=1377307 Copy/s, ReadSpeed=131.35 MB/s)
+Random read DB via 256 Threads using 31.2175ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1601633 Copy/s, ReadSpeed=152.743 MB/s)
+Random read DB via 256 Threads using 33.2612ms.             (ByteSize=100, Copies=49999, ReadCopySpeed=1503222 Copy/s, ReadSpeed=143.358 MB/s)
+
+======================================================================================
+
+Press any key to start a new test. (Press "q" for exit)

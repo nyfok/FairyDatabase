@@ -23,7 +23,7 @@ Module Main
         End Select
 
         'Press Any Key to exit
-        Console.WriteLine("Press any key to exit.")
+        Console.WriteLine("Program end. Press any key to exit.")
         Console.ReadLine()
     End Sub
 

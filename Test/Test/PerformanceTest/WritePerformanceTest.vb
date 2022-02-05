@@ -4,15 +4,15 @@ Public Class WritePerformanceTest
 
     Private Shared WriteNumber As Int64 = 9999
     Private Shared ByteSize As Int64 = 100
+    Private Shared IfVerifyData As Boolean = False
 
     Private Shared SampleBytes(ByteSize - 1) As Byte
     Private Shared SampleBytesHash As String
-    Private Shared IfVerifyData As Boolean
 
     Public Shared Sub Start()
         'Write Log
         Console.WindowWidth = 150
-        Console.WriteLine("Test: ByteSize=" & ByteSize & ", TestNumber=" & WriteNumber)
+        Console.WriteLine("Write Performance Test: TestNumber=" & WriteNumber & ", ByteSize=" & ByteSize & ", IfVerifyData=" & IfVerifyData)
         Console.WriteLine()
 
         'Init FairyDatabase Config
@@ -22,7 +22,6 @@ Public Class WritePerformanceTest
         'Init RandomIDs, IfVerifyData
         Randomize()
         PrepareRandomIDs()
-        IfVerifyData = False
 
         'Generate SampleBytes
         For I = 0 To ByteSize - 1
@@ -31,35 +30,60 @@ Public Class WritePerformanceTest
         Next
         SampleBytesHash = GetBytesHash(SampleBytes)
 
-        'Test Single Thread
-        Console.WriteLine("Processing Single Thread Test...")
-        For TestNumber = 1 To 2
-            TestWriteFilesInSingleThread()
-
-            For Each IfRandomWrite In New Boolean() {False, True}
-                TestWriteInSingleThread(IfRandomWrite)
-            Next
-
+        'Execute Test
+        Do While True
+            Console.WriteLine("Start to test write performance.")
             Console.WriteLine()
-        Next
-        Console.ReadLine()
 
-        'Test Multiple Threads
-        For Each ThreadNumber In New Integer() {2, 4, 8, 16, 32, 64, 128}
-            Console.WriteLine("Processing Multiple Threads Test...")
-
-            For TestNumber = 1 To 2
-                TestWriteFilesInMultipleThreads(ThreadNumber)
+            For Each ThreadNumber In New Integer() {1, 2, 4, 8, 16, 32, 64, 128, 256}
+                Console.WriteLine("-------------------------------------------------------------------------------------")
+                Console.WriteLine()
 
                 For Each IfRandomWrite In New Boolean() {False, True}
-                    TestWriteInMultipleThreads(ThreadNumber, IfRandomWrite)
+                    If IfRandomWrite Then
+                        Console.WriteLine("Start to test RANDOM write performance via " & ThreadNumber & " threads.")
+                    Else
+                        Console.WriteLine("Start to test SEQUENCY write performance via " & ThreadNumber & " threads.")
+                    End If
+                    Console.WriteLine()
+
+                    If ThreadNumber = 1 Then
+                        If IfRandomWrite = False Then
+                            For J = 1 To 5
+                                TestWriteFilesInSingleThread()
+                            Next
+                            Console.WriteLine()
+                        End If
+
+                        For J = 1 To 5
+                            TestWriteInSingleThread(IfRandomWrite)
+                        Next
+                        Console.WriteLine()
+                    Else
+                        If IfRandomWrite = False Then
+                            For J = 1 To 5
+                                TestWriteFilesInMultipleThreads(ThreadNumber)
+                            Next
+                            Console.WriteLine()
+                        End If
+
+                        For J = 1 To 5
+                            TestWriteInMultipleThreads(ThreadNumber, IfRandomWrite)
+                        Next
+                        Console.WriteLine()
+                    End If
+
                 Next
 
-                Console.WriteLine()
             Next
 
-            Console.ReadLine()
-        Next
+            Console.WriteLine("======================================================================================")
+            Console.WriteLine()
+            Console.WriteLine("Press any key to start a new test. (Press ""q"" for exit)")
+            Dim Input As String = Console.ReadLine()
+            If Input.Trim.ToLower = "q" Then Exit Do
+        Loop
+
     End Sub
 
 #Region "Test Write to Files"
@@ -110,7 +134,7 @@ Public Class WritePerformanceTest
         Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
-        Dim LogString = "Write files via single thread using " & MSeconds & "ms.                                                         "
+        Dim LogString = "Write FILES via single thread using " & MSeconds & "ms.                                                         "
         Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
     End Sub
@@ -157,7 +181,7 @@ Public Class WritePerformanceTest
         Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
-        Dim LogString = "Write files via " & ThreadNumber & " threads using " & MSeconds & "ms.                                                         "
+        Dim LogString = "Write FILES via " & ThreadNumber & " threads using " & MSeconds & "ms.                                                         "
         Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
     End Sub
@@ -226,7 +250,7 @@ Public Class WritePerformanceTest
             WriteWayString = "Sequency"
         End If
 
-        Dim LogString = WriteWayString & " write db via single thread using " & MSeconds & "ms.                                                         "
+        Dim LogString = WriteWayString & " write DB via single thread using " & MSeconds & "ms.                                                         "
         Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
         If FairyDatabase.Config.IfDebugMode Then
@@ -282,7 +306,7 @@ Public Class WritePerformanceTest
             WriteWayString = "Sequency"
         End If
 
-        Dim LogString = WriteWayString & " write db via " & ThreadNumber & " threads using " & MSeconds & "ms.                                                         "
+        Dim LogString = WriteWayString & " write DB via " & ThreadNumber & " threads using " & MSeconds & "ms.                                                         "
         Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
         If IfVerifyData Then
