@@ -1,6 +1,6 @@
 ﻿<h1>Fairy Database</h1>
 <h3>A lite and fast key-value database</h3>
-FairyDatabase is a lite and fast key-value database. It can be used to save PB numbers of small data/files and access by int64 number as key.
+FairyDatabase is a lite and fast key-value database. It can be used to save PB numbers of small data/files.
 
 <h2>Why use Fairy database</h2>
 If you have lots of small data/files (little then 1MB).<br>
@@ -58,6 +58,6 @@ Currently, runing FairyDatabase needs: <br>
  4. Add BufferWriter to optimize writing performance. In future, may develop BufferReader to optimize reading performance. <br>
   
 <h2>Hello from Jon</h2>
-I wrote this program on Feb.2022 and it took me for around 7 days. I hope this program may help you and your work. <br>
+I wrote this program on Feb.2022 and it took me for around 30 hours. I hope this program may help you and your work. <br>
 If you find any bug or have any suggestion, please feel free to let me know by leaving a message. <br>
-Thank you. Have a nice day. <br>
+Thank you and have a nice day. <br>
