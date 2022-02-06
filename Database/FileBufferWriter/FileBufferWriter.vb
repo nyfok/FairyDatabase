@@ -175,6 +175,7 @@ Public Class FileBufferWriter
     Public Sub Flush()
         Do While Buffers.Count > 0
             Try
+                If Buffers.Count = 0 Then Exit Do
                 Dim Buffer As FileBuffer = Buffers.First
                 If Buffer Is Nothing Then Continue Do
                 If Buffers.Contains(Buffer) Then Buffers.Remove(Buffer)

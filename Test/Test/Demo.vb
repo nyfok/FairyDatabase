@@ -3,7 +3,7 @@
 Public Class Demo
 
     Public Shared Sub Start()
-        'Init FairyDatabase 
+        'Init FairyDatabase (Optional)
         FairyDatabase.Config.Init()
         FairyDatabase.Config.IfDebugMode = False
 
