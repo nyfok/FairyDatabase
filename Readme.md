@@ -31,8 +31,7 @@ Use FairyDatabase is very simple. <br>
 Note: FairyDatabase use Int64 number as key to write and read data. <br>
 
 <h3>Write:</h3>
-<pre><code>
-    Dim DataID As Int64 = 1
+<pre><code>    Dim DataID As Int64 = 1
     Dim FData As New Data(DataID)
     FData.Value = System.Text.Encoding.UTF8.GetBytes("Hello World " & DataID & ". (" & Now.ToString & ")")
     Page.Write(FData)
@@ -40,8 +39,7 @@ Note: FairyDatabase use Int64 number as key to write and read data. <br>
 </code></pre>
 
 <h3>Read:</h3>
-<pre><code>
-    Dim FData As Data = Page.Read(DataID)
+<pre><code>    Dim FData As Data = Page.Read(DataID)
 </code></pre>
 
 <h2>Operating Environment</h2>
