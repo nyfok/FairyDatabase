@@ -31,15 +31,19 @@ Third, use FairyDatabase to Write/Read bytes like below.
 Note: FairyDatabase use Int64 number as key to write and read data.
 
 <h3>Write:</h3>
+```
     Dim DataID As Int64 = 1
     Dim FData As New Data(DataID)
     FData.Value = System.Text.Encoding.UTF8.GetBytes("Hello World " & DataID & ". (" & Now.ToString & ")")
     Page.Write(FData)
 
     Page.FlushAll()
+```
 
 <h3>Read:</h3>
+```
     Dim FData As Data = Page.Read(DataID)
+```
 
 <h2>Operating Environment</h2>
 Currently, runing FairyDatabase needs:
