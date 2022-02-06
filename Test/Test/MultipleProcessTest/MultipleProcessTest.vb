@@ -1,10 +1,13 @@
 ﻿Imports FairyDatabase
 
-Public Class WritePerformanceTest
+''' <summary>
+''' Please launch two processes manually to test multiple process write and read.
+''' </summary>
+Public Class MultipleProcessTest
 
-    Private Shared WriteNumber As Int64 = 9999
-    Private Shared ByteSize As Int64 = 100
-    Private Shared IfVerifyData As Boolean = False
+    Private Shared TestNumber As Int64 = 49999
+    Private Shared ByteSize As Int64 = 1000
+    Private Shared IfVerifyData As Boolean = True
 
     Private Shared SampleBytes(ByteSize - 1) As Byte
     Private Shared SampleBytesHash As String
@@ -12,7 +15,7 @@ Public Class WritePerformanceTest
     Public Shared Sub Start()
         'Write Log
         Console.WindowWidth = 150
-        Console.WriteLine("Write Performance Test: TestNumber=" & WriteNumber & ", ByteSize=" & ByteSize & ", IfVerifyData=" & IfVerifyData)
+        Console.WriteLine("Write Performance Test: TestNumber=" & TestNumber & ", ByteSize=" & ByteSize & ", IfVerifyData=" & IfVerifyData)
         Console.WriteLine()
 
         'Init FairyDatabase Config
@@ -26,62 +29,42 @@ Public Class WritePerformanceTest
         'Generate SampleBytes
         For I = 0 To ByteSize - 1
             Dim Number As Single = Rnd()
-            SampleBytes(I) = Int(Number * 256)
+            SampleBytes(I) = Int(I Mod 256)
         Next
         SampleBytesHash = GetBytesHash(SampleBytes)
 
         'Execute Test
         Do While True
-            Console.WriteLine("Start to test write performance.")
-            Console.WriteLine()
+            Dim ThreadNumber As Integer = 128
 
-            For Each ThreadNumber In New Integer() {1, 2, 4, 8, 16, 32, 64, 128, 256}
-                Console.WriteLine("-------------------------------------------------------------------------------------")
+            If False Then
+                Console.WriteLine("Press any key to start check correct rate.")
+                Console.ReadLine()
+                ClearAndInitResources()
+                CheckDataCorrectRate()
+                Continue Do
+            End If
+
+            For Each IfRandomWrite In New Boolean() {False, True}
+                DeleteFiles()
+
+                Console.WriteLine("Press any key to start write.")
+                Console.ReadLine()
+
+                If IfRandomWrite Then
+                    Console.WriteLine("Start to test RANDOM write performance via " & ThreadNumber & " threads.")
+                Else
+                    Console.WriteLine("Start to test SEQUENCY write performance via " & ThreadNumber & " threads.")
+                End If
                 Console.WriteLine()
 
-                For Each IfRandomWrite In New Boolean() {False, True}
-                    If IfRandomWrite Then
-                        Console.WriteLine("Start to test RANDOM write performance via " & ThreadNumber & " threads.")
-                    Else
-                        Console.WriteLine("Start to test SEQUENCY write performance via " & ThreadNumber & " threads.")
-                    End If
-                    Console.WriteLine()
+                TestWriteInMultipleThreads(ThreadNumber, IfRandomWrite)
 
-                    If ThreadNumber = 1 Then
-                        If IfRandomWrite = False Then
-                            For J = 1 To 5
-                                TestWriteFilesInSingleThread()
-                            Next
-                            Console.WriteLine()
-                        End If
-
-                        For J = 1 To 5
-                            TestWriteInSingleThread(IfRandomWrite)
-                        Next
-                        Console.WriteLine()
-                    Else
-                        If IfRandomWrite = False Then
-                            For J = 1 To 5
-                                TestWriteFilesInMultipleThreads(ThreadNumber)
-                            Next
-                            Console.WriteLine()
-                        End If
-
-                        For J = 1 To 5
-                            TestWriteInMultipleThreads(ThreadNumber, IfRandomWrite)
-                        Next
-                        Console.WriteLine()
-                    End If
-
-                Next
-
+                Console.WriteLine("Press any key to dispose db.")
+                Console.ReadLine()
+                DBDispose()
             Next
 
-            Console.WriteLine("======================================================================================")
-            Console.WriteLine()
-            Console.WriteLine("Press any key to start a new test. (Press ""q"" for exit)")
-            Dim Input As String = Console.ReadLine()
-            If Input.Trim.ToLower = "q" Then Exit Do
         Loop
 
     End Sub
@@ -129,13 +112,13 @@ Public Class WritePerformanceTest
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim WriteSpeed As Decimal = WriteNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim WriteSpeed As Decimal = TestNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
         WriteSpeed = Int(WriteSpeed * 1000) / 1000
-        Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
+        Dim WriteCopySpeed As Decimal = TestNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
         Dim LogString = "Write FILES via single thread using " & MSeconds & "ms.                                                         "
-        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
+        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & TestNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
     End Sub
 
@@ -176,13 +159,13 @@ Public Class WritePerformanceTest
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim WriteSpeed As Decimal = WriteNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim WriteSpeed As Decimal = TestNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
         WriteSpeed = Int(WriteSpeed * 1000) / 1000
-        Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
+        Dim WriteCopySpeed As Decimal = TestNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
         Dim LogString = "Write FILES via " & ThreadNumber & " threads using " & MSeconds & "ms.                                                         "
-        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
+        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & TestNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
     End Sub
 
@@ -238,9 +221,9 @@ Public Class WritePerformanceTest
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim WriteSpeed As Decimal = WriteNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim WriteSpeed As Decimal = TestNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
         WriteSpeed = Int(WriteSpeed * 1000) / 1000
-        Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
+        Dim WriteCopySpeed As Decimal = TestNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
         Dim WriteWayString As String
@@ -251,7 +234,7 @@ Public Class WritePerformanceTest
         End If
 
         Dim LogString = WriteWayString & " write DB via single thread using " & MSeconds & "ms.                                                         "
-        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
+        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & TestNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
         If FairyDatabase.Config.IfDebugMode Then
             Dim FWriter As FileBufferWriter = Page.GetPage(1).PageFileBufferWriter
@@ -294,9 +277,9 @@ Public Class WritePerformanceTest
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
-        Dim WriteSpeed As Decimal = WriteNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
+        Dim WriteSpeed As Decimal = TestNumber * SampleBytes.Length / 1024 / 1024 / MSeconds * 1000
         WriteSpeed = Int(WriteSpeed * 1000) / 1000
-        Dim WriteCopySpeed As Decimal = WriteNumber / MSeconds * 1000
+        Dim WriteCopySpeed As Decimal = TestNumber / MSeconds * 1000
         WriteCopySpeed = Int(WriteCopySpeed)
 
         Dim WriteWayString As String
@@ -307,12 +290,18 @@ Public Class WritePerformanceTest
         End If
 
         Dim LogString = WriteWayString & " write DB via " & ThreadNumber & " threads using " & MSeconds & "ms.                                                         "
-        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
+        Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & TestNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
-        If IfVerifyData Then
-            'PrintFileLength()
-            CheckDataCorrectRate()
-        End If
+        For I = 1 To 2
+            Console.WriteLine("Press any key to check data correct rate.")
+            Console.ReadLine()
+
+            If IfVerifyData Then
+                'PrintFileLength()
+                CheckDataCorrectRate()
+            End If
+
+        Next
     End Sub
 
     Private Shared Sub TestWriteInMultipleThreadsDO(ByVal ThreadID As Integer)
@@ -344,7 +333,7 @@ Public Class WritePerformanceTest
         'Console.WriteLine("Preparing Random IDs...")
 
         Dim RemainIDs As New List(Of Int64)
-        For I = 1 To WriteNumber
+        For I = 1 To TestNumber
             RemainIDs.Add(I)
         Next
 
@@ -369,7 +358,7 @@ Public Class WritePerformanceTest
     Private Shared Function GetNextDataID(ByVal IfRandomRead As Boolean) As Int64
         If IfRandomRead = False Then
             Dim DataID As Int64 = System.Threading.Interlocked.Increment(CurrentDataID)
-            If DataID > WriteNumber Then Return 0
+            If DataID > TestNumber Then Return 0
             Return DataID
         Else
             Dim DataID As Int64
@@ -404,10 +393,16 @@ Public Class WritePerformanceTest
     Private Shared Sub CheckDataCorrectRate()
         Dim ErrorCount As Integer = 0
 
-        For DataID = 1 To WriteNumber
+        For DataID = 1 To TestNumber
             Dim FData As Data = Page.Read(DataID)
 
             If FData Is Nothing OrElse FData.Value Is Nothing Then
+                If FData IsNot Nothing Then
+                    Console.WriteLine("Error Data: DataID=" & DataID & ", ID=" & FData.ID & ", StartPOS=" & FData.StartPOS)
+                    If FData.StartPOS > 0 Then
+                        Console.WriteLine("--")
+                    End If
+                End If
                 ErrorCount = ErrorCount + 1
                 Continue For
             End If
@@ -415,25 +410,53 @@ Public Class WritePerformanceTest
             Dim BytesHash As String = GetBytesHash(FData.Value)
             If SampleBytesHash <> BytesHash Then
                 ErrorCount = ErrorCount + 1
+                Console.WriteLine("Error Data: Wrong Start Position, FData.FirstValue=" & FData.Value.First & ", DataID=" & DataID & ", ID=" & FData.ID & ", StartPOS=" & FData.StartPOS)
             End If
         Next
 
         If ErrorCount = 0 Then
-            Console.WriteLine("All data correct! (Number=" & WriteNumber & ", CorrectRate=" & (WriteNumber - ErrorCount) * 100 / WriteNumber & "%)")
+            Console.WriteLine("All data correct! (Number=" & TestNumber & ", CorrectRate=" & (TestNumber - ErrorCount) * 100 / TestNumber & "%)")
         Else
-            Console.WriteLine(ErrorCount & " datas are error! (Number=" & WriteNumber & ", CorrectRate=" & (WriteNumber - ErrorCount) * 100 / WriteNumber & "%)")
+            Console.WriteLine(ErrorCount & " datas are error! (Number=" & TestNumber & ", CorrectRate=" & (TestNumber - ErrorCount) * 100 / TestNumber & "%)")
         End If
     End Sub
 
     Private Shared Sub ClearAndInitResources()
-        'Clear Page Files and Memory
+        'Init CurrentDataID, NextDataIDs
+        CurrentDataID = 0
+
+        NextDataIDs = New Concurrent.ConcurrentQueue(Of Int64)
+        For Each ID In RandomIDs
+            NextDataIDs.Enqueue(ID)
+        Next
+
+        'Console.WriteLine("Related resource clear and inited.")
+    End Sub
+
+    Private Shared Sub DBDispose()
         If Page.Pages IsNot Nothing Then
             For Each PageItem In Page.Pages
                 If PageItem.Value IsNot Nothing Then
                     Try
                         PageItem.Value.ClearPageHeaderMemory()
                         PageItem.Value.Dispose()
+                    Catch ex As Exception
+                        Console.WriteLine(ex.ToString)
+                    End Try
+                End If
+            Next
+        End If
+    End Sub
 
+    Private Shared Sub DeleteFiles()
+        Console.WriteLine("Press any key to delete test db files.")
+        Console.ReadLine()
+
+        'Clear Page Files and Memory
+        If Page.Pages IsNot Nothing Then
+            For Each PageItem In Page.Pages
+                If PageItem.Value IsNot Nothing Then
+                    Try
                         If System.IO.File.Exists(PageItem.Value.FilePath) Then System.IO.File.Delete(PageItem.Value.FilePath)
                         If System.IO.File.Exists(PageItem.Value.PendingRemoveBlocksFilePath) Then System.IO.File.Delete(PageItem.Value.PendingRemoveBlocksFilePath)
                     Catch ex As Exception
@@ -455,15 +478,8 @@ Public Class WritePerformanceTest
 
         Page.Pages = New Concurrent.ConcurrentDictionary(Of Int64, Page)
 
-        'Init CurrentDataID, NextDataIDs
-        CurrentDataID = 0
+        Console.WriteLine("Test db files are all deleted.")
 
-        NextDataIDs = New Concurrent.ConcurrentQueue(Of Int64)
-        For Each ID In RandomIDs
-            NextDataIDs.Enqueue(ID)
-        Next
-
-        'Console.WriteLine("Related resource clear and inited.")
     End Sub
 
 #End Region

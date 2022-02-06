@@ -18,8 +18,9 @@ Module Main
             Case 3
                 ReadPerformanceTest.Start()
             Case 4
+                MultipleProcessTest.Start()
+            Case 5
                 TestOthers.Start()
-
         End Select
 
         'Press Any Key to exit

@@ -16,7 +16,7 @@ Public Class ReadPerformanceTest
         Console.WriteLine()
 
         'Init FairyDatabase Config
-        FairyDatabase.Config.Init(,, False)
+        FairyDatabase.Config.Init()
         FairyDatabase.Config.IfDebugMode = False
 
         'Init RandomIDs

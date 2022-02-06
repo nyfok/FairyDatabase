@@ -4,7 +4,7 @@ Public Class TestOthers
 
     Public Shared Sub Start()
 
-        Select Case 4
+        Select Case 6
             Case 1
                 TestSharedMemory()
             Case 2
@@ -70,6 +70,29 @@ Public Class TestOthers
 
                     Console.ReadLine()
                 Next
+
+            Case 5
+                'Test MutexACL Dispose
+                Dim FMutex As New MutexACL("Global\TestMutex")
+
+                Dim Max As Integer = Now.Second Mod 10
+                For I = 1 To Max
+                    Console.WriteLine("Waiting " & I & " of " & Max)
+                    FMutex.WaitOne()
+                    Console.WriteLine("Got " & I & ". Press any key to release.")
+                    Console.ReadLine()
+                    FMutex.Release()
+                Next
+
+                Console.WriteLine("Pending Dispose. Press any key to continue.")
+                Console.ReadLine()
+                FMutex.Dispose()
+
+            Case 6
+                For i = 1 To 1000000
+                    Dim FMutex As New MutexACL("Global\TestMutex" & i)
+                Next
+                Console.WriteLine("created 100000 mutex.")
         End Select
     End Sub
 

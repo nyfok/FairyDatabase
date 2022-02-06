@@ -4,7 +4,7 @@ Public Class Demo
 
     Public Shared Sub Start()
         'Init FairyDatabase 
-        FairyDatabase.Config.Init(, 2 * 1024 * 1024, True)
+        FairyDatabase.Config.Init()
         FairyDatabase.Config.IfDebugMode = False
 
         'Write Data

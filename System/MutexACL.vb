@@ -145,9 +145,8 @@ Public Class MutexACL
             ' TODO: 释放未托管的资源(未托管的对象)并重写终结器
             ' TODO: 将大型字段设置为 null
             If FMutex IsNot Nothing Then
-                FMutex.ReleaseMutex()
-                FMutex.Dispose()
                 FMutex.Close()
+                FMutex.Dispose()
                 FMutex = Nothing
             End If
 

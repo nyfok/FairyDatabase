@@ -15,12 +15,14 @@ Public Class Page
     Public Sub New(ByVal ID As Int64)
         Me.ID = ID
 
+        'Init Mutexes
+        CreateMutexes()
+
         'Cal FilePath
         FilePath = GetPageFilePath(ID)
         PendingRemoveBlocksFilePath = GetPageRBFilePath(ID)
 
-        'Create LengthMutex, PageHeaderMemory
-        LengthMutex = New MutexACL("Global\FDBP" & ID & "HeaderMutex")
+        'Create PageHeaderMemory
         CreatePageHeaderMemory()
 
         'Check if need to Create PageFile
@@ -33,7 +35,6 @@ Public Class Page
         End If
 
         'Check if need to Create PendingRemoveBlocksFile
-        RemoveBlocksFileMutex = New MutexACL("Global\FDBP" & ID & "RBMutex")
         If File.Exists(PendingRemoveBlocksFilePath) = False Then
             CreatePendingRemoveBlocksFile()
         End If
@@ -44,55 +45,153 @@ Public Class Page
         End If
     End Sub
 
+#Region "Mutexes"
+
+    Private FileMutex As MutexACL
+    Private FileRBMutex As MutexACL
+    Private HeaderMutex As MutexACL
+
+    Private IndexMutexes As New Concurrent.ConcurrentDictionary(Of Integer, MutexACL)
+
+    Private Sub CreateMutexes()
+        FileMutex = New MutexACL("Global\FDBP" & ID & "FileMutex")
+        FileRBMutex = New MutexACL("Global\FDBP" & ID & "RBMutex")
+        HeaderMutex = New MutexACL("Global\FDBP" & ID & "HeaderMutex")
+    End Sub
+
+    Private CreateIndexMutexLock As New Object
+
+    Private Function GetOneIndexMutex(ByVal DataID As Int64) As MutexACL
+        'Get IndexMutexsID
+        Dim IndexMutexID As Integer
+        IndexMutexID = DataID Mod Config.PageHeaderIndexMutexesSize
+
+        'Check if exists
+        If IndexMutexes.ContainsKey(IndexMutexID) Then Return IndexMutexes(IndexMutexID)
+
+        'Create a new one
+        SyncLock CreateIndexMutexLock
+            If IndexMutexes.ContainsKey(IndexMutexID) Then Return IndexMutexes(IndexMutexID)
+
+            Dim FMutex As New MutexACL("Global\FDBP" & ID & "Index" & IndexMutexID & "Mutex")
+            IndexMutexes.TryAdd(IndexMutexID, FMutex)
+
+            Return FMutex
+        End SyncLock
+    End Function
+
+
+    Private Sub DisposeAllMutexes()
+        If FileMutex IsNot Nothing Then
+            Try
+                FileMutex.Dispose()
+                FileMutex = Nothing
+            Catch ex As Exception
+                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+            End Try
+        End If
+
+        If FileRBMutex IsNot Nothing Then
+            Try
+                FileRBMutex.Dispose()
+                FileRBMutex = Nothing
+            Catch ex As Exception
+                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+            End Try
+        End If
+
+        If HeaderMutex IsNot Nothing Then
+            Try
+                HeaderMutex.Dispose()
+                HeaderMutex = Nothing
+            Catch ex As Exception
+                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+            End Try
+        End If
+
+        If IndexMutexes IsNot Nothing Then
+            Try
+                For Each item In IndexMutexes
+                    Try
+                        If item.Value IsNot Nothing Then
+                            item.Value.Dispose()
+                        End If
+                    Catch ex2 As Exception
+                        If Config.IfDebugMode Then Console.WriteLine(ex2.ToString)
+                    End Try
+                Next
+
+                IndexMutexes = New Concurrent.ConcurrentDictionary(Of Integer, MutexACL)
+            Catch ex As Exception
+                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+            End Try
+        End If
+    End Sub
+
+#End Region
+
 #Region "FileReated: CreatePageFile, FileLength"
 
     Public Sub CreatePageFile()
-        Dim FMutexACL As New MutexACL("Global\FDBP" & ID & "Mutex")
-        FMutexACL.WaitOne()
+        FileMutex.WaitOne()
 
-        If File.Exists(FilePath) Then Return
-
-        Dim PageFolderPath As String = New FileInfo(FilePath).DirectoryName
-        If Directory.Exists(PageFolderPath) = False Then
-            Directory.CreateDirectory(PageFolderPath)
+        If File.Exists(FilePath) Then
+            FileMutex.Release()
+            Return
         End If
 
-        Dim FStream As New FileStream(FilePath, FileMode.CreateNew)
-        FStream.SetLength(Config.DatabasePageFileInitSize)  'use to fast create file
-        FStream.Flush()
-        FStream.Close()
-        FStream.Dispose()
+        Try
+            Dim PageFolderPath As String = New FileInfo(FilePath).DirectoryName
+            If Directory.Exists(PageFolderPath) = False Then
+                Directory.CreateDirectory(PageFolderPath)
+            End If
 
-        If Config.SupportPageHeaderBuffer Then
-            WriteLengthToFile(Config.DataPageHeaderSize)
-            WriteToHeaderMemory(ReadFromHeaderFile)
-        Else
-            WriteLengthToMemory(Config.DataPageHeaderSize)
-            WriteLengthToFile(Config.DataPageHeaderSize)
-        End If
+            Dim FStream As New FileStream(FilePath, FileMode.CreateNew)
+            FStream.SetLength(Config.DatabasePageFileInitSize)  'use to fast create file
+            FStream.Flush()
+            FStream.Close()
+            FStream.Dispose()
 
-        FMutexACL.Release()
+            If Config.SupportPageHeaderBuffer Then
+                WriteLengthToFile(Config.DataPageHeaderSize)
+                WriteToHeaderMemory(ReadFromHeaderFile)
+            Else
+                WriteLengthToMemory(Config.DataPageHeaderSize)
+                WriteLengthToFile(Config.DataPageHeaderSize)
+            End If
+
+        Catch ex As Exception
+            If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+        End Try
+
+        FileMutex.Release()
     End Sub
 
 
-    Private RemoveBlocksFileMutex As MutexACL
-
     Public Sub CreatePendingRemoveBlocksFile()
-        RemoveBlocksFileMutex.WaitOne()
+        FileRBMutex.WaitOne()
 
-        If File.Exists(PendingRemoveBlocksFilePath) Then Return
+        Try
+            If File.Exists(PendingRemoveBlocksFilePath) Then
+                FileRBMutex.Release()
+                Return
+            End If
 
-        Dim PageFolderPath As String = New FileInfo(PendingRemoveBlocksFilePath).DirectoryName
-        If Directory.Exists(PageFolderPath) = False Then
-            Directory.CreateDirectory(PageFolderPath)
-        End If
+            Dim PageFolderPath As String = New FileInfo(PendingRemoveBlocksFilePath).DirectoryName
+            If Directory.Exists(PageFolderPath) = False Then
+                Directory.CreateDirectory(PageFolderPath)
+            End If
 
-        Dim FStream As New FileStream(PendingRemoveBlocksFilePath, FileMode.CreateNew)
-        FStream.Flush()
-        FStream.Close()
-        FStream.Dispose()
+            Dim FStream As New FileStream(PendingRemoveBlocksFilePath, FileMode.CreateNew)
+            FStream.Flush()
+            FStream.Close()
+            FStream.Dispose()
 
-        RemoveBlocksFileMutex.Release()
+        Catch ex As Exception
+            If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+        End Try
+
+        FileRBMutex.Release()
     End Sub
 
 
@@ -212,8 +311,6 @@ Public Class Page
 #Region "Length: Real Data Length"
     'Real Data Length of this Page file, Store in Memory
 
-    Public LengthMutex As MutexACL
-
     ''' <summary>
     ''' Will Return the StartPOS. If -1, means do not write data block
     ''' </summary>
@@ -227,30 +324,35 @@ Public Class Page
         If AppendLength <= 0 Then Return StartPOS
 
         'Wait Sign
-        LengthMutex.WaitOne()
+        HeaderMutex.WaitOne()
 
         'Execute
-        Dim Length As Int64 = ReadLengthFromMemory()
-        'Console.WriteLine("Length from Memory: " & Length)
-        StartPOS = Length
-        Length = Length + AppendLength
+        Try
+            Dim Length As Int64 = ReadLengthFromMemory()
+            'Console.WriteLine("Length from Memory: " & Length)
+            StartPOS = Length
+            Length = Length + AppendLength
 
-        WriteLengthToMemory(Length)
-        'Console.WriteLine("Write Length to Memory: " & Length)
+            WriteLengthToMemory(Length)
+            'Console.WriteLine("Write Length to Memory: " & Length)
 
-        'Flush to File 
-        If UpdateHeaderToFileTimer Is Nothing Then
-            If Config.SupportPageHeaderBuffer Then
-                Dim FTimerCallback As TimerCallback = AddressOf FlushHeaderToFile
-                UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, Config.PageHeaderBufferFlushMSeconds, -1)
-            Else
-                Dim FTimerCallback As TimerCallback = AddressOf UpdateLengthToFile
-                UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, Config.PageLengthFlushMSeconds, -1)
+            'Flush to File 
+            If UpdateHeaderToFileTimer Is Nothing Then
+                If Config.SupportPageHeaderBuffer Then
+                    Dim FTimerCallback As TimerCallback = AddressOf FlushHeaderToFile
+                    UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, Config.PageHeaderBufferFlushMSeconds, -1)
+                Else
+                    Dim FTimerCallback As TimerCallback = AddressOf UpdateLengthToFile
+                    UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, Config.PageLengthFlushMSeconds, -1)
+                End If
             End If
-        End If
+
+        Catch ex As Exception
+            If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+        End Try
 
         'Release Sign
-        LengthMutex.Release()
+        HeaderMutex.Release()
 
         'Return Value
         Return StartPOS
@@ -375,7 +477,7 @@ Public Class Page
     ''' <param name="Bytes"></param>
     ''' <param name="Position"></param>
     Private Sub WriteToHeader(ByVal Bytes() As Byte, Optional ByVal Position As Int64 = 0)
-        'Check Position
+        'Check input
         'Do not write the Meta Area
         If Position < Config.DataPageHeaderMetaSize Then Return
 
@@ -388,6 +490,24 @@ Public Class Page
             UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, Config.PageHeaderBufferFlushMSeconds, -1)
         End If
     End Sub
+
+    Private Function ReadFromHeader(Optional ByVal Position As Int64 = 0, Optional ByVal Length As Int64 = 0) As Byte()
+        'Check input
+        If Position < 0 OrElse Position >= PageHeaderMemory.Size OrElse Length < 0 Then Return Nothing
+        Dim MaxRemainLength As Int64 = PageHeaderMemory.Size - Position
+        If Length = 0 Then
+            Length = MaxRemainLength
+        ElseIf Length > MaxRemainLength Then
+            Length = MaxRemainLength
+        End If
+
+        'Read Bytes
+        Dim Bytes As Byte()
+        Bytes = PageHeaderMemory.Read(Position, Length)
+
+        'Return Value
+        Return Bytes
+    End Function
 
     Private Sub CreatePageHeaderMemory()
         'Create Memory
@@ -414,28 +534,39 @@ Public Class Page
 
     Private Sub LoadPageHeaderMemoryFromFile()
         'Wait Signal
-        LengthMutex.WaitOne()
+        HeaderMutex.WaitOne()
 
-        'Check if already read by other process
-        Dim Length As Int64 = ReadLengthFromMemory()
-        If Length > 0 Then Return
+        Try
+            'Check if already read by other process
+            Dim Length As Int64 = ReadLengthFromMemory()
+            If Length > 0 Then
+                'Release Signal
+                HeaderMutex.Release()
 
-        'Console.WriteLine("LoadPageHeaderMemoryFromFile")
-
-        'Execute Load
-        If File.Exists(FilePath) Then
-            If Config.SupportPageHeaderBuffer Then
-                Dim HeaderBytes As Byte() = ReadFromHeaderFile()
-                WriteToHeaderMemory(HeaderBytes)
-            Else
-                Length = ReadLengthFromFile()
-                WriteLengthToMemory(Length)
+                Return
             End If
-        End If
+
+            'Console.WriteLine("LoadPageHeaderMemoryFromFile")
+
+            'Execute Load
+            If File.Exists(FilePath) Then
+                If Config.SupportPageHeaderBuffer Then
+                    Dim HeaderBytes As Byte() = ReadFromHeaderFile()
+                    WriteToHeaderMemory(HeaderBytes)
+                Else
+                    Length = ReadLengthFromFile()
+                    WriteLengthToMemory(Length)
+                End If
+            End If
+
+        Catch ex As Exception
+            If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+        End Try
 
         'Release Signal
-        LengthMutex.Release()
+        HeaderMutex.Release()
     End Sub
+
     Public Sub ClearPageHeaderMemory()
         If PageHeaderMemory Is Nothing OrElse PageHeaderMemory.Size = 0 Then Return
         Dim FBytes(PageHeaderMemory.Size - 1) As Byte
@@ -566,83 +697,8 @@ Public Class Page
             FStream = File.Open(FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
         End If
 
-        'Check if re-use the current section
-        Dim IfReUseBlock As Boolean = False
-
-        Dim CurrentDataIndex As Byte()
-        If Config.SupportPageHeaderBuffer Then
-            CurrentDataIndex = ReadFromHeaderMemory(GetDataIndexPOS(FData.ID), Config.DataPageHeaderDataIndexSize)
-        Else
-            CurrentDataIndex = ReadDataIndex(FStream, FData.ID)
-        End If
-
-        Dim CurrentData As New Data
-        CurrentData.PageIndexBytes = CurrentDataIndex
-
-        If CurrentData.ID = 0 AndAlso CurrentData.Length = 0 AndAlso CurrentData.StartPOS = 0 Then
-            'not use now => not reuse
-            IfReUseBlock = False
-        Else
-            If CurrentData.BlockLength >= FData.BlockLength Then
-                'Space enough, can reuse
-                IfReUseBlock = True
-                FData.StartPOS = CurrentData.StartPOS
-                FData.BlockLength = CurrentData.BlockLength
-            Else
-                'Not enough space, cannot reuse
-                IfReUseBlock = False
-            End If
-        End If
-
-        'If not reuse block
-        '1. Update Length, data block will append data at the end of page file
-        '2. Make sure File Length is enough
-        '3. Add to PendingRemoveBlocks if has old data block
-        If IfReUseBlock = False Then
-            'Update Length
-            FData.StartPOS = AddLength(FData.Length)
-
-            'Make sure file length enough
-            If FData.Length > 0 Then
-                Dim EndLength As Int64 = FData.StartPOS + FData.Length
-                If CachedFileLength < EndLength Then
-                    If FileLength < EndLength Then
-                        FStream.SetLength(FileLength + Config.DatabasePageFileInitSize)  'use to fast expend file
-                    End If
-                End If
-            End If
-
-            'Add to PendingRemoveBlocks
-            If CurrentData.StartPOS > 0 Then
-                RemoveBlocksFileMutex.WaitOne()
-
-                Dim FStream2 As FileStream
-                FStream2 = File.Open(PendingRemoveBlocksFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
-                FStream2.Position = FStream2.Length
-
-                FStream2.Write(CurrentData.PageRemoveBlockBytes)
-                FStream2.Flush()
-                FStream2.Close()
-                FStream2.Dispose()
-
-                RemoveBlocksFileMutex.Release()
-            End If
-        End If
-
         'Write Data Index
-        If Config.SupportPageHeaderBuffer Then
-            WriteToHeader(FData.PageIndexBytes, GetDataIndexPOS(FData.ID))
-        Else
-            'Write based on SupportWriteBuffer settings
-            If Config.SupportWriteBuffer = False Then
-                'Support Multiple Thread Write
-                FStream.Position = GetDataIndexPOS(FData.ID)
-                Dim PageIndexBytes As Byte() = FData.PageIndexBytes
-                FStream.Write(PageIndexBytes, 0, PageIndexBytes.Count)
-            Else
-                PageFileBufferWriter.Write(FStream, GetDataIndexPOS(FData.ID), FData.PageIndexBytesFull)
-            End If
-        End If
+        WriteDataIndex(FStream, FData)
 
         'Write Data Block
         'Write based on SupportWriteBuffer settings
@@ -669,6 +725,111 @@ Public Class Page
 
     End Sub
 
+    Private Sub WriteDataIndex(ByRef FStream As FileStream, ByRef FData As Data)
+
+        'Wait Signal
+        Dim IndexMutex As MutexACL = GetOneIndexMutex(FData.ID)
+        IndexMutex.WaitOne()
+
+        'Execute
+        Try
+            'Get Current Data Index
+            Dim CurrentData As New Data
+            If Config.SupportPageHeaderBuffer Then
+                CurrentData.PageIndexBytes = ReadFromHeader(GetDataIndexPOS(FData.ID), Config.DataPageHeaderDataIndexSize)
+            Else
+                CurrentData.PageIndexBytes = ReadDataIndex(FStream, FData.ID)
+            End If
+
+            'Check if re-use the current section
+            Dim IfReUseBlock As Boolean = False
+            If CurrentData.ID = 0 AndAlso CurrentData.Length = 0 AndAlso CurrentData.StartPOS = 0 Then
+                'not use now => not reuse
+                IfReUseBlock = False
+            Else
+                If CurrentData.BlockLength >= FData.BlockLength Then
+                    'Space enough, can reuse
+                    IfReUseBlock = True
+                    FData.StartPOS = CurrentData.StartPOS
+                    FData.BlockLength = CurrentData.BlockLength
+                Else
+                    'Not enough space, cannot reuse
+                    IfReUseBlock = False
+                End If
+            End If
+
+            'If not reuse block
+            '1. Get StartPOS and Update Length. Data block will append data at the end of page file
+            '2. Make sure File Length is enough
+            '3. Add to PendingRemoveBlocks if has old data block
+            If IfReUseBlock = False Then
+                '1. Get StartPOS and Update Length
+                FData.StartPOS = AddLength(FData.Length)
+
+                '2. Make sure file length enough
+                If FData.Length > 0 Then
+                    Dim EndLength As Int64 = FData.StartPOS + FData.Length
+                    If CachedFileLength < EndLength Then
+                        If FileLength < EndLength Then
+                            FileMutex.WaitOne()
+
+                            If FileLength < EndLength Then
+                                FStream.SetLength(FileLength + Config.DatabasePageFileInitSize)  'use to fast expend file
+                            End If
+
+                            FileMutex.Release()
+                        End If
+                    End If
+                End If
+
+                '3. Add to PendingRemoveBlocks
+                If CurrentData.StartPOS > 0 Then
+                    FileRBMutex.WaitOne()
+
+                    Try
+                        Dim FStream2 As FileStream
+                        FStream2 = File.Open(PendingRemoveBlocksFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
+                        FStream2.Position = FStream2.Length
+
+                        FStream2.Write(CurrentData.PageRemoveBlockBytes)
+                        FStream2.Flush()
+                        FStream2.Close()
+                        FStream2.Dispose()
+                    Catch ex As Exception
+                        If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                    End Try
+
+                    FileRBMutex.Release()
+                End If
+            End If
+
+            'Write Data Index
+            If Config.SupportPageHeaderBuffer Then
+                WriteToHeader(FData.PageIndexBytes, GetDataIndexPOS(FData.ID))
+            Else
+                'Write based on SupportWriteBuffer settings
+                If Config.SupportWriteBuffer = False Then
+                    'Support Multiple Thread Write
+                    FStream.Position = GetDataIndexPOS(FData.ID)
+                    Dim PageIndexBytes As Byte() = FData.PageIndexBytes
+                    FStream.Write(PageIndexBytes, 0, PageIndexBytes.Count)
+                Else
+                    PageFileBufferWriter.Write(FStream, GetDataIndexPOS(FData.ID), FData.PageIndexBytesFull)
+                End If
+            End If
+
+        Catch ex As Exception
+            'Release Signal
+            IndexMutex.Release()
+
+            'Throw Ex
+            Throw ex
+        End Try
+
+        'Release Signal
+        IndexMutex.Release()
+
+    End Sub
 
 #End Region
 
@@ -841,9 +1002,14 @@ Public Class Page
             'Destory FileStream
             DestoryAllFileStreams()
 
+            'Dispose Mutexes
+            DisposeAllMutexes()
+
+            'Set disposedValue
             disposedValue = True
         End If
     End Sub
+
 
     ' ' TODO: 仅当“Dispose(disposing As Boolean)”拥有用于释放未托管资源的代码时才替代终结器
     ' Protected Overrides Sub Finalize()

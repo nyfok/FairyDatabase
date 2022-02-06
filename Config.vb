@@ -5,10 +5,9 @@
     ''' </summary>
     Public Shared IfDebugMode As Boolean = False
 
-    Public Shared Sub Init(Optional ByVal DatabaseFolderPath As String = "db\", Optional ByVal DatabasePageFileInitSize As Int64 = 2 * 1024 * 1024, Optional ByVal SupportWriteBuffer As Boolean = True)
+    Public Shared Sub Init(Optional ByVal DatabaseFolderPath As String = "db\", Optional ByVal DatabasePageFileInitSize As Int64 = 2 * 1024 * 1024)
         Config.DatabaseFolderPath = DatabaseFolderPath
         Config.DatabasePageFileInitSize = DatabasePageFileInitSize
-        Config.SupportWriteBuffer = SupportWriteBuffer
     End Sub
 
 
@@ -76,7 +75,7 @@
     ''' If True => Write to disk after WriteBufferFlushMSeconds or buffer size >= PageWriteBufferSize.
     ''' If False => Write immediately.
     ''' </summary>
-    Public Shared SupportWriteBuffer As Boolean = True
+    Public Const SupportWriteBuffer As Boolean = True
 
     ''' <summary>
     ''' Write Buffer Wait MSeconds before auto flush
@@ -108,6 +107,12 @@
     ''' If SupportPageHeaderBuffer=False, will use PageLengthFlushMSeconds to flush length only
     ''' </summary>
     Public Const PageLengthFlushMSeconds As Integer = 1000
+
+    ''' <summary>
+    ''' Set each page has how many index mutexes.
+    ''' This settings always functional and will ignore SupportPageHeaderBuffer settings. 
+    ''' </summary>
+    Public Const PageHeaderIndexMutexesSize As Integer = 100
 
 #End Region
 
