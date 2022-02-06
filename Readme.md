@@ -36,7 +36,6 @@ Note: FairyDatabase use Int64 number as key to write and read data. <br>
     Dim FData As New Data(DataID)
     FData.Value = System.Text.Encoding.UTF8.GetBytes("Hello World " & DataID & ". (" & Now.ToString & ")")
     Page.Write(FData)
-
     Page.FlushAll()
 </code></pre>
 
