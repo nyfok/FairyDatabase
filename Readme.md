@@ -31,19 +31,19 @@ Use FairyDatabase is very simple. <br>
 Note: FairyDatabase use Int64 number as key to write and read data. <br>
 
 <h3>Write:</h3>
-​<code>
+```
     Dim DataID As Int64 = 1
     Dim FData As New Data(DataID)
     FData.Value = System.Text.Encoding.UTF8.GetBytes("Hello World " & DataID & ". (" & Now.ToString & ")")
     Page.Write(FData)
 
     Page.FlushAll()
-​</code>
+```
 
 <h3>Read:</h3>
-​<code>
+```
     Dim FData As Data = Page.Read(DataID)
-​</code>
+```
 
 <h2>Operating Environment</h2>
 Currently, runing FairyDatabase needs: <br>
