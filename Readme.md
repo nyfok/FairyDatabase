@@ -4,7 +4,6 @@ FairyDatabase is a light and fast key-value database. It can be used to save pet
 
 <br>
 <br>
-<br>
 <h2>When to use Fairy Database</h2>
 When you have lots of small data/files (smaller then 1MB).<br>
 When you don't want save large amounts of data/files into a typical Relational DB such as MySQL/SQL Server, which can cause low performance and inefficent space usage.<br>
