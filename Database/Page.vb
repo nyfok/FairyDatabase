@@ -20,7 +20,7 @@ Public Class Page
         PendingRemoveBlocksFilePath = GetPageRBFilePath(ID)
 
         'Create LengthMutex, PageHeaderMemory
-        LengthMutex = New MutexACL("FDBP" & ID & "HeaderMutex")
+        LengthMutex = New MutexACL("Global\FDBP" & ID & "HeaderMutex")
         CreatePageHeaderMemory()
 
         'Check if need to Create PageFile
@@ -33,7 +33,7 @@ Public Class Page
         End If
 
         'Check if need to Create PendingRemoveBlocksFile
-        RemoveBlocksFileMutex = New MutexACL("FDBP" & ID & "RBMutex")
+        RemoveBlocksFileMutex = New MutexACL("Global\FDBP" & ID & "RBMutex")
         If File.Exists(PendingRemoveBlocksFilePath) = False Then
             CreatePendingRemoveBlocksFile()
         End If
@@ -47,7 +47,7 @@ Public Class Page
 #Region "FileReated: CreatePageFile, FileLength"
 
     Public Sub CreatePageFile()
-        Dim FMutexACL As New MutexACL("FDBP" & ID & "Mutex")
+        Dim FMutexACL As New MutexACL("Global\FDBP" & ID & "Mutex")
         FMutexACL.WaitOne()
 
         If File.Exists(FilePath) Then Return
@@ -112,8 +112,8 @@ Public Class Page
         End Get
     End Property
 
-    Private Shared theCachedFileLength As Int64 = -1
-    Private Shared CachedFileLengthLastUpdateTime As DateTime
+    Private theCachedFileLength As Int64 = -1
+    Private CachedFileLengthLastUpdateTime As DateTime
     Public ReadOnly Property CachedFileLength As Int64
         Get
             If theCachedFileLength >= 0 AndAlso Now.Subtract(CachedFileLengthLastUpdateTime).TotalMilliseconds < 500 Then Return theCachedFileLength
@@ -723,6 +723,7 @@ Public Class Page
 
                     If CachedFileLength < EndLength Then
                         'not enough length, not read bytes
+                        If Config.IfDebugMode Then Console.WriteLine("not enough length, not read bytes")
                     Else
                         'Execute Read
                         ReDim FData.Value(FData.Length - 1)
