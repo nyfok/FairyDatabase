@@ -13,14 +13,14 @@ If you say <b>YES</b> to any of these question above, you may try FairyDatabase.
 <b>Good Performance:</b><br>
 Write Speed: FairyDatabase is 8+ times faster then using OS file system to save files.<br>
 Read Speed: FairyDatabase is 10+ times faster then using OS file system to save files.<br>
-(Please refer to /Test/Test/PerformanceTest/ to check the performance test resut.)<br>
+(Please refer to <a href="https://github.com/nyfok/FairyDatabase/tree/develop/Test/Test/PerformanceTestResultsReference">/Test/Test/PerformanceTest/</a> to check the performance test resut.)<br>
 
 <b>Space Saving:</b> <br>
 Write 10000 1200Bytes files to file system will take 39.0 MB disk space (up to disk drive's cluster settings).<br>
 Write 10000 1200Bytes files to FairyDatabase will take 14.0 MB disk space (disk driver's cluster settings will not influence space a lot.)<br>
 
 <b>Multiple Thread and Processes Support</b> <br>
-Currently, FairyDatabase support multiple thread and processes. Internal, FairyDatabase use ShareMemory/Mutex to synchronize different threads or processes. All these are already supported, what you need to do is just import the FairyDatabase.<br>
+Currently, FairyDatabase support multiple thread and processes. Internal, FairyDatabase use ShareMemory/Mutex to synchronize different threads or processes. All these are already supported, what you need to do is just import the FairyDatabase.
 If future, FairyDatabase may support network grid version if I have time to continue upgrade this program.<br>
 
 <h2>How to use it</h2>
