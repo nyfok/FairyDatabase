@@ -4,7 +4,7 @@ Public Class TestOthers
 
     Public Shared Sub Start()
 
-        Select Case 6
+        Select Case 7
             Case 1
                 TestSharedMemory()
             Case 2
@@ -93,6 +93,15 @@ Public Class TestOthers
                     Dim FMutex As New MutexACL("Global\TestMutex" & i)
                 Next
                 Console.WriteLine("created 100000 mutex.")
+
+            Case 7
+                Console.WriteLine(CType(3.6, Integer))
+                Dim num(7) As Integer
+
+                ReDim Preserve num(10)
+
+                FariyDatabaseCSharp.Test.Start()
+
         End Select
     End Sub
 

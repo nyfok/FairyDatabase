@@ -774,7 +774,13 @@ Public Class Page
                             FileMutex.WaitOne()
 
                             If FileLength < EndLength Then
-                                FStream.SetLength(FileLength + Config.DatabasePageFileInitSize)  'use to fast expend file
+                                Dim NewFileLength As Int64 = FileLength + Config.DatabasePageFileInitSize
+
+                                Do While NewFileLength < EndLength
+                                    NewFileLength = NewFileLength + Config.DatabasePageFileInitSize
+                                Loop
+
+                                FStream.SetLength(NewFileLength)  'use to fast expend file
                             End If
 
                             FileMutex.Release()
