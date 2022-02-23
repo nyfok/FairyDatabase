@@ -164,7 +164,7 @@ Public Class FileBuffer
             FStream.Write(ByteList.ToArray, 0, ByteList.Count)
             FStream.Flush()
 
-            If True OrElse StartPosition >= (Config.DataPageHeaderMetaSize + Config.DataPageHeaderDataIndexSize * Config.DataPageSize) Then
+            If False Then
                 'Console.WriteLine(Now.ToString & ": Flush Position: " & StartPosition & ", Flush Length: " & ByteList.Count)
             End If
 

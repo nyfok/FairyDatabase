@@ -96,7 +96,7 @@ Public Class FileBufferWriter
             'Console.WriteLine("Write Position A: " & Position & ", Write Length: " & Bytes.Count)
             Return
         End If
-        If Config.IfDebugMode Then
+        If Settings.IfDebugMode Then
             SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
             If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Check AllBufferLength. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
             StartTime = Now
@@ -104,7 +104,7 @@ Public Class FileBufferWriter
 
         'Check If Exists Buffer
         Dim ExistsBuffer As FileBuffer = GetExistsBuffer(Position)
-        If Config.IfDebugMode Then
+        If Settings.IfDebugMode Then
             SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
             If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Check Exists Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
             StartTime = Now
@@ -115,7 +115,7 @@ Public Class FileBufferWriter
             ExistsBuffer.Write(FStream, Position, Bytes)
             Return
         End If
-        If Config.IfDebugMode Then
+        If Settings.IfDebugMode Then
             SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
             If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": ExistsBuffer Write Bytes. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
             StartTime = Now
@@ -124,7 +124,7 @@ Public Class FileBufferWriter
 
         'No Exists Buffer, create a new one
         SyncLock CreateNewBufferLock
-            If Config.IfDebugMode Then
+            If Settings.IfDebugMode Then
                 SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
                 If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Wait CreateNewBufferLock. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
                 StartTime = Now
@@ -132,7 +132,7 @@ Public Class FileBufferWriter
 
             'Check If Exists Buffer
             ExistsBuffer = GetExistsBuffer(Position)
-            If Config.IfDebugMode Then
+            If Settings.IfDebugMode Then
                 SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
                 If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Check Exists Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
                 StartTime = Now
@@ -142,7 +142,7 @@ Public Class FileBufferWriter
                 ExistsBuffer.Write(FStream, Position, Bytes)
                 Return
             End If
-            If Config.IfDebugMode Then
+            If Settings.IfDebugMode Then
                 SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
                 If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": ExistsBuffer Write Bytes.(StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms")
                 StartTime = Now
@@ -152,15 +152,15 @@ Public Class FileBufferWriter
             Dim FBuffer As New FileBuffer(FilePath, Me, FlushMSeconds, Position, Bytes)
             AddBuffer(FBuffer)
 
-            If Config.IfDebugMode Then
+            If Settings.IfDebugMode Then
                 SpanMSeconds = Now.Subtract(StartTime).TotalMilliseconds
                 If SpanMSeconds > ShowLogMSeconds Then Console.WriteLine(Now.ToString & ": Create new Buffer. (StartPosition=" & Position & ", WaitTime=" & SpanMSeconds & "ms, BuffersCount=" & Buffers.Count)
 
-                If Position < Config.DataPageHeaderSize Then
-                    CreateNewCount_Index = CreateNewCount_Index + 1
-                Else
-                    CreateNewCount_Block = CreateNewCount_Block + 1
-                End If
+                'If Position < Settings.DataPageHeaderSize Then
+                '    CreateNewCount_Index = CreateNewCount_Index + 1
+                'Else
+                '    CreateNewCount_Block = CreateNewCount_Block + 1
+                'End If
             End If
 
         End SyncLock

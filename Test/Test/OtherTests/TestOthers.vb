@@ -127,12 +127,18 @@ Public Class TestOthers
     End Sub
 
     Private Sub TestRead(ByVal ThreadID As Integer)
+        'Add Database Connection
+        Dim DatabaseName As String = "TestDB"
+        Dim Config As New FairyDatabase.DatabaseConfig(DatabaseName)
+        Dim Database As New FairyDatabase.Database(Config)
+
+        Dim TableName As String = "TestTable"
 
         For i = 1 To 10
             Console.WriteLine(ThreadID & ": " & i)
 
             Dim DataID As Int64 = i
-            Dim fdata As Data = Page.Read(DataID)
+            Dim fdata As Data = Database.Read(TableName, DataID)
 
             If fdata IsNot Nothing And fdata.Value IsNot Nothing Then
                 System.IO.File.WriteAllBytes("temp/" & ThreadID & "-" & i & ".zip", fdata.Value)

@@ -4,6 +4,9 @@ Imports System.Threading
 Public Class Page
     Implements IDisposable
 
+    Public DatabaseConfig As DatabaseConfig
+
+    Public TableName As String
     Public ID As Int64
     Public FilePath As String   'Page File Path
     Public IfFileExists As Boolean
@@ -12,8 +15,10 @@ Public Class Page
 
     Public PageFileBufferWriter As FileBufferWriter
 
-    Public Sub New(ByVal ID As Int64)
+    Public Sub New(ByVal TableName As String, ByVal ID As Int64, ByRef DatabaseConfig As DatabaseConfig)
+        Me.TableName = TableName
         Me.ID = ID
+        Me.DatabaseConfig = DatabaseConfig
 
         'Init Mutexes
         CreateMutexes()
@@ -40,8 +45,8 @@ Public Class Page
         End If
 
         'Create Buffer Writer if SupportWriteBuffer
-        If Config.SupportWriteBuffer Then
-            PageFileBufferWriter = New FileBufferWriter(FilePath, Config.DataPageWriteBufferSize, Config.WriteBufferFlushMSeconds)
+        If DatabaseConfig.SupportWriteBuffer Then
+            PageFileBufferWriter = New FileBufferWriter(FilePath, DatabaseConfig.DataPageWriteBufferSize, DatabaseConfig.WriteBufferFlushMSeconds)
         End If
     End Sub
 
@@ -54,9 +59,9 @@ Public Class Page
     Private IndexMutexes As New Concurrent.ConcurrentDictionary(Of Integer, MutexACL)
 
     Private Sub CreateMutexes()
-        FileMutex = New MutexACL("Global\FDBP" & ID & "FileMutex")
-        FileRBMutex = New MutexACL("Global\FDBP" & ID & "RBMutex")
-        HeaderMutex = New MutexACL("Global\FDBP" & ID & "HeaderMutex")
+        FileMutex = New MutexACL("Global\FDB-" & DatabaseConfig.DatabaseKey & "-" & TableName & "-P" & ID & "FileMutex")
+        FileRBMutex = New MutexACL("Global\FDB-" & DatabaseConfig.DatabaseKey & "-" & TableName & "-P" & ID & "RBMutex")
+        HeaderMutex = New MutexACL("Global\FDB-" & DatabaseConfig.DatabaseKey & "-" & TableName & "-P" & ID & "HeaderMutex")
     End Sub
 
     Private CreateIndexMutexLock As New Object
@@ -64,7 +69,7 @@ Public Class Page
     Private Function GetOneIndexMutex(ByVal DataID As Int64) As MutexACL
         'Get IndexMutexsID
         Dim IndexMutexID As Integer
-        IndexMutexID = DataID Mod Config.PageHeaderIndexMutexesSize
+        IndexMutexID = DataID Mod DatabaseConfig.PageHeaderIndexMutexesSize
 
         'Check if exists
         If IndexMutexes.ContainsKey(IndexMutexID) Then Return IndexMutexes(IndexMutexID)
@@ -87,7 +92,7 @@ Public Class Page
                 FileMutex.Dispose()
                 FileMutex = Nothing
             Catch ex As Exception
-                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         End If
 
@@ -96,7 +101,7 @@ Public Class Page
                 FileRBMutex.Dispose()
                 FileRBMutex = Nothing
             Catch ex As Exception
-                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         End If
 
@@ -105,7 +110,7 @@ Public Class Page
                 HeaderMutex.Dispose()
                 HeaderMutex = Nothing
             Catch ex As Exception
-                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         End If
 
@@ -117,13 +122,13 @@ Public Class Page
                             item.Value.Dispose()
                         End If
                     Catch ex2 As Exception
-                        If Config.IfDebugMode Then Console.WriteLine(ex2.ToString)
+                        If Settings.IfDebugMode Then Console.WriteLine(ex2.ToString)
                     End Try
                 Next
 
                 IndexMutexes = New Concurrent.ConcurrentDictionary(Of Integer, MutexACL)
             Catch ex As Exception
-                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         End If
     End Sub
@@ -147,21 +152,21 @@ Public Class Page
             End If
 
             Dim FStream As New FileStream(FilePath, FileMode.CreateNew)
-            FStream.SetLength(Config.DatabasePageFileInitSize)  'use to fast create file
+            FStream.SetLength(DatabaseConfig.DatabasePageFileInitSize)  'use to fast create file
             FStream.Flush()
             FStream.Close()
             FStream.Dispose()
 
-            If Config.SupportPageHeaderBuffer Then
-                WriteLengthToFile(Config.DataPageHeaderSize)
+            If DatabaseConfig.SupportPageHeaderBuffer Then
+                WriteLengthToFile(DatabaseConfig.DataPageHeaderSize)
                 WriteToHeaderMemory(ReadFromHeaderFile)
             Else
-                WriteLengthToMemory(Config.DataPageHeaderSize)
-                WriteLengthToFile(Config.DataPageHeaderSize)
+                WriteLengthToMemory(DatabaseConfig.DataPageHeaderSize)
+                WriteLengthToFile(DatabaseConfig.DataPageHeaderSize)
             End If
 
         Catch ex As Exception
-            If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+            If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
         End Try
 
         FileMutex.Release()
@@ -188,7 +193,7 @@ Public Class Page
             FStream.Dispose()
 
         Catch ex As Exception
-            If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+            If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
         End Try
 
         FileRBMutex.Release()
@@ -280,7 +285,7 @@ Public Class Page
                 Dim FStream As FileStream = FileStreams.ElementAt(I)
                 FStream.Flush()
             Catch ex As Exception
-                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         Next
     End Sub
@@ -299,7 +304,7 @@ Public Class Page
                     FStream = Nothing
                 End If
             Catch ex As Exception
-                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         Loop
 
@@ -338,17 +343,17 @@ Public Class Page
 
             'Flush to File 
             If UpdateHeaderToFileTimer Is Nothing Then
-                If Config.SupportPageHeaderBuffer Then
+                If DatabaseConfig.SupportPageHeaderBuffer Then
                     Dim FTimerCallback As TimerCallback = AddressOf FlushHeaderToFile
-                    UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, Config.PageHeaderBufferFlushMSeconds, -1)
+                    UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, DatabaseConfig.PageHeaderBufferFlushMSeconds, -1)
                 Else
                     Dim FTimerCallback As TimerCallback = AddressOf UpdateLengthToFile
-                    UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, Config.PageLengthFlushMSeconds, -1)
+                    UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, DatabaseConfig.PageLengthFlushMSeconds, -1)
                 End If
             End If
 
         Catch ex As Exception
-            If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+            If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
         End Try
 
         'Release Sign
@@ -436,7 +441,7 @@ Public Class Page
         Dim FBytes As Byte() = BitConverter.GetBytes(Length)
         FStream.Write(FBytes)
 
-        If Config.IfDebugMode Then
+        If Settings.IfDebugMode Then
             Console.WriteLine("Write Length to File: " & Length)
         End If
     End Sub
@@ -479,7 +484,7 @@ Public Class Page
     Private Sub WriteToHeader(ByVal Bytes() As Byte, Optional ByVal Position As Int64 = 0)
         'Check input
         'Do not write the Meta Area
-        If Position < Config.DataPageHeaderMetaSize Then Return
+        If Position < DatabaseConfig.DataPageHeaderMetaSize Then Return
 
         'Write to Memory
         PageHeaderMemory.Write(Bytes, Position)
@@ -487,7 +492,7 @@ Public Class Page
         'Flush to File 
         If UpdateHeaderToFileTimer Is Nothing Then
             Dim FTimerCallback As TimerCallback = AddressOf FlushHeaderToFile
-            UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, Config.PageHeaderBufferFlushMSeconds, -1)
+            UpdateHeaderToFileTimer = New Timer(FTimerCallback, Nothing, DatabaseConfig.PageHeaderBufferFlushMSeconds, -1)
         End If
     End Sub
 
@@ -512,14 +517,14 @@ Public Class Page
     Private Sub CreatePageHeaderMemory()
         'Create Memory
         Dim MemorySize As Int64
-        If Config.SupportPageHeaderBuffer Then
-            MemorySize = Config.DataPageHeaderSize
+        If DatabaseConfig.SupportPageHeaderBuffer Then
+            MemorySize = DatabaseConfig.DataPageHeaderSize
         Else
             MemorySize = 8
         End If
 
         Dim IfNewCreate As Boolean = False
-        PageHeaderMemory = New SharedMemory("FDBP" & ID, MemorySize, IfNewCreate)
+        PageHeaderMemory = New SharedMemory("FDB-" & DatabaseConfig.DatabaseKey & "-" & TableName & "-P" & ID, MemorySize, IfNewCreate)
 
         'Init Header or Length
         If IfNewCreate Then
@@ -550,7 +555,7 @@ Public Class Page
 
             'Execute Load
             If File.Exists(FilePath) Then
-                If Config.SupportPageHeaderBuffer Then
+                If DatabaseConfig.SupportPageHeaderBuffer Then
                     Dim HeaderBytes As Byte() = ReadFromHeaderFile()
                     WriteToHeaderMemory(HeaderBytes)
                 Else
@@ -560,7 +565,7 @@ Public Class Page
             End If
 
         Catch ex As Exception
-            If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+            If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
         End Try
 
         'Release Signal
@@ -653,7 +658,7 @@ Public Class Page
         'Write
         FStream.Write(Bytes)
 
-        If Config.IfDebugMode Then
+        If Settings.IfDebugMode Then
             Console.WriteLine("Write Header to File.")
         End If
     End Sub
@@ -702,7 +707,7 @@ Public Class Page
 
         'Write Data Block
         'Write based on SupportWriteBuffer settings
-        If Config.SupportWriteBuffer = False Then
+        If DatabaseConfig.SupportWriteBuffer = False Then
             'Support nothing write for pre-allocate byte space
             If FData.StartPOS > 0 AndAlso FData.Value IsNot Nothing AndAlso FData.Value.Count > 0 Then
                 FStream.Position = FData.StartPOS
@@ -735,8 +740,8 @@ Public Class Page
         Try
             'Get Current Data Index
             Dim CurrentData As New Data
-            If Config.SupportPageHeaderBuffer Then
-                CurrentData.PageIndexBytes = ReadFromHeader(GetDataIndexPOS(FData.ID), Config.DataPageHeaderDataIndexSize)
+            If DatabaseConfig.SupportPageHeaderBuffer Then
+                CurrentData.PageIndexBytes = ReadFromHeader(GetDataIndexPOS(FData.ID), DatabaseConfig.DataPageHeaderDataIndexSize)
             Else
                 CurrentData.PageIndexBytes = ReadDataIndex(FStream, FData.ID)
             End If
@@ -774,10 +779,10 @@ Public Class Page
                             FileMutex.WaitOne()
 
                             If FileLength < EndLength Then
-                                Dim NewFileLength As Int64 = FileLength + Config.DatabasePageFileInitSize
+                                Dim NewFileLength As Int64 = FileLength + DatabaseConfig.DatabasePageFileInitSize
 
                                 Do While NewFileLength < EndLength
-                                    NewFileLength = NewFileLength + Config.DatabasePageFileInitSize
+                                    NewFileLength = NewFileLength + DatabaseConfig.DatabasePageFileInitSize
                                 Loop
 
                                 FStream.SetLength(NewFileLength)  'use to fast expend file
@@ -802,7 +807,7 @@ Public Class Page
                         FStream2.Close()
                         FStream2.Dispose()
                     Catch ex As Exception
-                        If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                        If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
                     End Try
 
                     FileRBMutex.Release()
@@ -810,17 +815,17 @@ Public Class Page
             End If
 
             'Write Data Index
-            If Config.SupportPageHeaderBuffer Then
+            If DatabaseConfig.SupportPageHeaderBuffer Then
                 WriteToHeader(FData.PageIndexBytes, GetDataIndexPOS(FData.ID))
             Else
                 'Write based on SupportWriteBuffer settings
-                If Config.SupportWriteBuffer = False Then
+                If DatabaseConfig.SupportWriteBuffer = False Then
                     'Support Multiple Thread Write
                     FStream.Position = GetDataIndexPOS(FData.ID)
                     Dim PageIndexBytes As Byte() = FData.PageIndexBytes
                     FStream.Write(PageIndexBytes, 0, PageIndexBytes.Count)
                 Else
-                    PageFileBufferWriter.Write(FStream, GetDataIndexPOS(FData.ID), FData.PageIndexBytesFull)
+                    PageFileBufferWriter.Write(FStream, GetDataIndexPOS(FData.ID), FData.PageIndexBytesFull(DatabaseConfig.DataPageHeaderDataIndexSize))
                 End If
             End If
 
@@ -869,8 +874,8 @@ Public Class Page
 
         'Read Data Index
         Dim DataIndex As Byte()
-        If Config.SupportPageHeaderBuffer Then
-            DataIndex = ReadFromHeaderMemory(GetDataIndexPOS(DataID), Config.DataPageHeaderDataIndexSize)
+        If DatabaseConfig.SupportPageHeaderBuffer Then
+            DataIndex = ReadFromHeaderMemory(GetDataIndexPOS(DataID), DatabaseConfig.DataPageHeaderDataIndexSize)
         Else
             DataIndex = ReadDataIndex(FStream, DataID)
         End If
@@ -890,7 +895,7 @@ Public Class Page
 
                     If CachedFileLength < EndLength Then
                         'not enough length, not read bytes
-                        If Config.IfDebugMode Then Console.WriteLine("not enough length, not read bytes")
+                        If Settings.IfDebugMode Then Console.WriteLine("not enough length, not read bytes")
                     Else
                         'Execute Read
                         ReDim FData.Value(FData.Length - 1)
@@ -924,7 +929,7 @@ Public Class Page
 #Region "Data Index Operate"
 
     Public Function ReadDataIndex(ByRef FStream As FileStream, ByVal DataID As Int64) As Byte()
-        Dim Bytes(Config.DataPageHeaderDataIndexSize - 1) As Byte
+        Dim Bytes(DatabaseConfig.DataPageHeaderDataIndexSize - 1) As Byte
 
         FStream.Position = GetDataIndexPOS(DataID)
         FStream.Read(Bytes, 0, Bytes.Length)
@@ -937,13 +942,27 @@ Public Class Page
         FStream.Write(Bytes, 0, Bytes.Length)
     End Sub
 
-    Public Shared Function GetDataIndexPOS(ByVal DataID As Int64) As Int64
-        Dim IndexID As Int64 = DataID Mod Config.DataPageSize
-        Dim POS As Int64 = Config.DataPageHeaderMetaSize + Config.DataPageHeaderDataIndexSize * IndexID
+    Public Function GetDataIndexPOS(ByVal DataID As Int64) As Int64
+        Dim IndexID As Int64 = DataID Mod DatabaseConfig.DataPageSize
+        Dim POS As Int64 = DatabaseConfig.DataPageHeaderMetaSize + DatabaseConfig.DataPageHeaderDataIndexSize * IndexID
         Return POS
     End Function
 
 #End Region
+
+
+#Region "Common Functions"
+
+    Public Function GetPageFilePath(ByVal PageID As Int64) As String
+        Return DatabaseConfig.DatabaseFolderPath & TableName & "\" & Int(PageID / DatabaseConfig.DataPageFolderSize) & "dpf\" & PageID & "dp.fdb"
+    End Function
+
+    Public Function GetPageRBFilePath(ByVal PageID As Int64) As String
+        Return DatabaseConfig.DatabaseFolderPath.TrimEnd("\") & "\" & TableName & "\" & Int(PageID / DatabaseConfig.DataPageFolderSize) & "dpf\" & PageID & "dprb.fdb"
+    End Function
+
+#End Region
+
 
 #Region "Dispose"
 
@@ -954,16 +973,16 @@ Public Class Page
                 UpdateHeaderToFileTimer.Dispose()
                 UpdateHeaderToFileTimer = Nothing
             Catch ex As Exception
-                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
             Try
-                If Config.SupportPageHeaderBuffer Then
+                If DatabaseConfig.SupportPageHeaderBuffer Then
                     FlushHeaderToFile()
                 Else
                     UpdateLengthToFile()
                 End If
             Catch ex As Exception
-                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         End If
 
@@ -972,7 +991,7 @@ Public Class Page
             Try
                 PageFileBufferWriter.Flush()
             Catch ex As Exception
-                If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
             End Try
         End If
 
@@ -1001,7 +1020,7 @@ Public Class Page
                     PageFileBufferWriter.Dispose()
                     PageFileBufferWriter = Nothing
                 Catch ex As Exception
-                    If Config.IfDebugMode Then Console.WriteLine(ex.ToString)
+                    If Settings.IfDebugMode Then Console.WriteLine(ex.ToString)
                 End Try
             End If
 
@@ -1033,78 +1052,6 @@ Public Class Page
 
 #End Region
 
-
-#Region "Shared Functions"
-
-    Public Shared Pages As New Concurrent.ConcurrentDictionary(Of Int64, Page)
-    Private Shared CreatePageLock As New Object
-
-    Public Shared Sub Write(ByVal FData As Data)
-        'Get Page
-        Dim FPage As Page = GetPage(FData.ID)
-
-        'Execute
-        FPage.WriteData(FData)
-    End Sub
-
-    Public Shared Function Read(ByVal DataID As Int64) As Data
-        'Get Page
-        Dim FPage As Page = GetPage(DataID)
-
-        'Execute
-        Return FPage.ReadData(DataID)
-    End Function
-
-    Public Shared Sub FlushAll()
-        For Each PageItem In Pages
-            If PageItem.Value IsNot Nothing Then
-                Try
-                    PageItem.Value.Flush()
-                Catch ex As Exception
-                End Try
-            End If
-        Next
-    End Sub
-
-    Public Shared Function GetPageID(ByVal DataID As Int64) As Int64
-        Return Int(DataID / Config.DataPageSize)
-    End Function
-
-    Public Shared Function GetPage(ByVal DataID As Int64) As Page
-        'Get Page ID
-        Dim PageID As Int64 = GetPageID(DataID)
-
-        'Get Page
-        If Pages.ContainsKey(PageID) Then Return Pages(PageID)
-
-        SyncLock CreatePageLock
-            If Pages.ContainsKey(PageID) Then Return Pages(PageID)
-
-            Dim FPage As New Page(PageID)
-            Pages.TryAdd(PageID, FPage)
-
-            Return FPage
-        End SyncLock
-
-    End Function
-
-    Public Shared Function GetPageFilePath(ByVal PageID As Int64) As String
-        If String.IsNullOrWhiteSpace(Config.DatabaseFolderPath) Then
-            Return Int(PageID / Config.DataPageFolderSize) & "dpf\" & PageID & "dp.fdb" 'DPF means data page folder, DP means data page.
-        Else
-            Return Config.DatabaseFolderPath.TrimEnd("\") & "\" & Int(PageID / Config.DataPageFolderSize) & "dpf\" & PageID & "dp.fdb"
-        End If
-    End Function
-
-    Public Shared Function GetPageRBFilePath(ByVal PageID As Int64) As String
-        If String.IsNullOrWhiteSpace(Config.DatabaseFolderPath) Then
-            Return Int(PageID / Config.DataPageFolderSize) & "dpf\" & PageID & "dprb.fdb" 'DPF means data page folder, DPRB means data page pending remove data blocks.
-        Else
-            Return Config.DatabaseFolderPath.TrimEnd("\") & "\" & Int(PageID / Config.DataPageFolderSize) & "dpf\" & PageID & "dprb.fdb"
-        End If
-    End Function
-
-#End Region
 
 
 End Class

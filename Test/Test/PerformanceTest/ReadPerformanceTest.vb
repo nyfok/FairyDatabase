@@ -2,6 +2,10 @@
 
 Public Class ReadPerformanceTest
 
+    Private Shared DatabaseName As String = "TestDB"
+    Private Shared TableName As String = "TestTable"
+    Private Shared Database As FairyDatabase.Database
+
     Private Shared ReadNumber As Int64 = 49999
     Private Shared ByteSize As Int64 = 100
     Private Shared IfVerifyData As Boolean = False
@@ -15,9 +19,12 @@ Public Class ReadPerformanceTest
         Console.WriteLine("Read Performance Test: TestNumber=" & ReadNumber & ", ByteSize=" & ByteSize & ", IfVerifyData=" & IfVerifyData)
         Console.WriteLine()
 
-        'Init FairyDatabase Config
-        FairyDatabase.Config.Init()
-        FairyDatabase.Config.IfDebugMode = False
+        'Get Database 
+        Dim Config As New DatabaseConfig(DatabaseName)
+        Database = New FairyDatabase.Database(Config)
+
+        'Set Debug Mode
+        FairyDatabase.Settings.IfDebugMode = False
 
         'Init RandomIDs
         Randomize()
@@ -140,7 +147,7 @@ Public Class ReadPerformanceTest
             ManualResetEvents(ThreadID - 1).WaitOne()
         Next
 
-        Page.FlushAll()
+        Database.FlushTable(TableName)
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
@@ -198,7 +205,7 @@ Public Class ReadPerformanceTest
             Dim DataID As Int64 = GetNextDataID(IfRandomRead)
             If DataID <= 0 Then Exit Do
 
-            Dim FData As Data = Page.Read(DataID)
+            Dim FData As Data = Database.Read(TableName, DataID)
             If IfVerifyData Then ReadSamples.Enqueue(FData)
 
             'Console.WriteLine("Read " & DataID & " ok. (Value.Length=" & FData.Value.Length & ")")
@@ -250,7 +257,7 @@ Public Class ReadPerformanceTest
             ManualResetEvents(ThreadID - 1).WaitOne()
         Next
 
-        Page.FlushAll()
+        Database.FlushTable(TableName)
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
@@ -280,7 +287,7 @@ Public Class ReadPerformanceTest
             Dim DataID As Int64 = GetNextDataID(TestReadInMultipleThreads_IfRandomRead)
             If DataID <= 0 Then Exit Do
 
-            Dim FData As Data = Page.Read(DataID)
+            Dim FData As Data = Database.Read(TableName, DataID)
             If IfVerifyData Then ReadSamples.Enqueue(FData)
 
             'Console.WriteLine("(" & ThreadID & ") Read " & DataID & " ok. (Value.Length=" & FData.Value.Length & ")")
@@ -311,12 +318,12 @@ Public Class ReadPerformanceTest
         'Exectue
         For Count = 1 To ReadNumber
             Dim FData As New Data(Count, SampleBytes)
-            Page.Write(FData)
+            Database.Write(TableName, FData)
 
             'Console.WriteLine("Write " & Count & " ok.")
         Next
 
-        Page.FlushAll()
+        Database.FlushTable(TableName)
 
         'Prepare Test Files
         PrepareTestFiles()
@@ -363,7 +370,7 @@ Public Class ReadPerformanceTest
             'Console.WriteLine("Write " & DataID & " ok.")
         Loop
 
-        Page.FlushAll()
+        Database.FlushTable(TableName)
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
@@ -422,7 +429,8 @@ Public Class ReadPerformanceTest
 #Region "Tools"
 
     Private Shared Sub PrintFileLength()
-        For Each PageItem In Page.Pages
+
+        For Each PageItem In Database.GetTable(TableName).Pages
             If PageItem.Value IsNot Nothing Then
                 Try
                     Console.WriteLine("Page " & PageItem.Value.ID & " Length = " & PageItem.Value.FileLength)
@@ -477,8 +485,8 @@ Public Class ReadPerformanceTest
 
     Private Shared Sub ClearAndInitResources(Optional ByVal IfRandomRead As Boolean = True)
         'Clear Page Files and Memory
-        If Page.Pages IsNot Nothing Then
-            For Each PageItem In Page.Pages
+        If Database.GetTable(TableName).Pages IsNot Nothing Then
+            For Each PageItem In Database.GetTable(TableName).Pages
                 If PageItem.Value IsNot Nothing Then
                     Try
                         PageItem.Value.ClearPageHeaderMemory()
@@ -490,8 +498,8 @@ Public Class ReadPerformanceTest
             Next
         End If
 
-        If System.IO.Directory.Exists(Config.DatabaseFolderPath) Then
-            For Each FilePath In System.IO.Directory.GetFiles(Config.DatabaseFolderPath, "*.fdb", System.IO.SearchOption.AllDirectories)
+        If System.IO.Directory.Exists(Database.DatabaseConfig.DatabaseFolderPath) Then
+            For Each FilePath In System.IO.Directory.GetFiles(Database.DatabaseConfig.DatabaseFolderPath, "*.fdb", System.IO.SearchOption.AllDirectories)
                 Try
                     System.IO.File.Delete(FilePath)
                 Catch ex As Exception
@@ -500,7 +508,7 @@ Public Class ReadPerformanceTest
             Next
         End If
 
-        Page.Pages = New Concurrent.ConcurrentDictionary(Of Int64, Page)
+        Database.GetTable(TableName).Pages = New Concurrent.ConcurrentDictionary(Of Int64, Page)
 
         'Init CurrentDataID, NextDataIDs
         CurrentDataID = 0

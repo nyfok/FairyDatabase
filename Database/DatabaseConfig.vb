@@ -1,30 +1,54 @@
-﻿Public Class Config
+﻿Public Class DatabaseConfig
 
-    ''' <summary>
-    ''' Debug mode will output some log.
-    ''' </summary>
-    Public Shared IfDebugMode As Boolean = False
+    Public Sub New(ByVal DatabaseName As String, Optional ByVal DatabaseFolderPath As String = "db\", Optional ByVal DatabasePageFileInitSize As Int64 = 2 * 1024 * 1024)
+        Me.DatabaseName = DatabaseName
+        Me.DatabaseFolderPath = DatabaseFolderPath
+        Me.DatabasePageFileInitSize = DatabasePageFileInitSize
+    End Sub
 
-    Public Shared Sub Init(Optional ByVal DatabaseFolderPath As String = "db\", Optional ByVal DatabasePageFileInitSize As Int64 = 2 * 1024 * 1024)
-        Config.DatabaseFolderPath = DatabaseFolderPath
-        Config.DatabasePageFileInitSize = DatabasePageFileInitSize
+    Private theDatabaseName As String
+
+    Public Property DatabaseName As String
+        Get
+            Return theDatabaseName
+        End Get
+        Set(value As String)
+            theDatabaseName = value
+            ReCalDatabaseKey()
+        End Set
+    End Property
+
+    Public DatabaseKey As String = ""
+
+    Private Sub ReCalDatabaseKey()
+        Dim Key As String = ""
+
+        If String.IsNullOrWhiteSpace(DatabaseName) = False Then
+            Key = DatabaseName.Trim.ToLower
+        End If
+
+        If String.IsNullOrWhiteSpace(DatabaseFolderPath) = False Then
+            Dim MD5 As String = BitConverter.ToString(CType(System.Security.Cryptography.CryptoConfig.CreateFromName("MD5"), System.Security.Cryptography.HashAlgorithm).ComputeHash((New System.Text.UnicodeEncoding).GetBytes(DatabaseFolderPath.Trim.ToLower)))
+            MD5 = MD5.Replace("-", "").Substring(0, 8)
+            Key = Key & "-" & MD5
+        End If
+
+        DatabaseKey = Key
     End Sub
 
 
-#Region "Database Configuration"
-
-    Private Shared theDatabaseFolderPath As String = "db\"
+    Private theDatabaseFolderPath As String = "db\"
 
     ''' <summary>
     ''' Database's Folder Path. Support relative path and absolute path.
     ''' </summary>
     ''' <returns></returns>
-    Public Shared Property DatabaseFolderPath As String
+    Public Property DatabaseFolderPath As String
         Get
             Return theDatabaseFolderPath
         End Get
         Set(value As String)
-            'should blank or end with \
+            'should end with \
             If String.IsNullOrWhiteSpace(value) Then
                 theDatabaseFolderPath = "db\"
             Else
@@ -34,6 +58,8 @@
                 Else
                     theDatabaseFolderPath = value & "\"
                 End If
+
+                ReCalDatabaseKey()
             End If
         End Set
     End Property
@@ -41,7 +67,7 @@
     ''' <summary>
     ''' Database's Page File's Init Size. Large size will get better read/write performance because request big space at once will get more continous disk spaces.
     ''' </summary>
-    Public Shared DatabasePageFileInitSize As Int64 = 2 * 1024 * 1024   '2M Bytes
+    Public DatabasePageFileInitSize As Int64 = 2 * 1024 * 1024   '2M Bytes
 
     ''' <summary>
     ''' How many datas in one data page file.
@@ -116,7 +142,5 @@
 
 #End Region
 
-
-#End Region
 
 End Class

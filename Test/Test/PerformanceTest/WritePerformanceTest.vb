@@ -2,6 +2,10 @@
 
 Public Class WritePerformanceTest
 
+    Private Shared DatabaseName As String = "TestDB"
+    Private Shared TableName As String = "TestTable"
+    Private Shared Database As FairyDatabase.Database
+
     Private Shared WriteNumber As Int64 = 9999
     Private Shared ByteSize As Int64 = 100
     Private Shared IfVerifyData As Boolean = False
@@ -15,9 +19,12 @@ Public Class WritePerformanceTest
         Console.WriteLine("Write Performance Test: TestNumber=" & WriteNumber & ", ByteSize=" & ByteSize & ", IfVerifyData=" & IfVerifyData)
         Console.WriteLine()
 
-        'Init FairyDatabase Config
-        FairyDatabase.Config.Init()
-        FairyDatabase.Config.IfDebugMode = False
+        'Get Database 
+        Dim Config As New DatabaseConfig(DatabaseName)
+        Database = New FairyDatabase.Database(Config)
+
+        'Set Debug Mode
+        FairyDatabase.Settings.IfDebugMode = False
 
         'Init RandomIDs, IfVerifyData
         Randomize()
@@ -125,7 +132,7 @@ Public Class WritePerformanceTest
             'Console.WriteLine("Write " & DataID & " ok.")
         Loop
 
-        Page.FlushAll()
+        Database.FlushTable(TableName)
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
@@ -172,7 +179,7 @@ Public Class WritePerformanceTest
             ManualResetEvents(ThreadID - 1).WaitOne()
         Next
 
-        Page.FlushAll()
+        Database.FlushTable(TableName)
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
@@ -229,12 +236,12 @@ Public Class WritePerformanceTest
             If DataID <= 0 Then Exit Do
 
             Dim FData As New Data(DataID, SampleBytes)
-            Page.Write(FData)
+            Database.Write(TableName, FData)
 
             'Console.WriteLine("Write " & DataID & " ok.")
         Loop
 
-        Page.FlushAll()
+        Database.FlushTable(TableName)
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
@@ -253,11 +260,11 @@ Public Class WritePerformanceTest
         Dim LogString = WriteWayString & " write DB via single thread using " & MSeconds & "ms.                                                         "
         Console.WriteLine(LogString.Substring(0, 60) & "(ByteSize=" & SampleBytes.Length & ", Copies=" & WriteNumber & ", WriteCopySpeed=" & WriteCopySpeed & " Copy/s, WriteSpeed=" & WriteSpeed & " MB/s)")
 
-        If FairyDatabase.Config.IfDebugMode Then
-            Dim FWriter As FileBufferWriter = Page.GetPage(1).PageFileBufferWriter
-            If FWriter IsNot Nothing Then
-                Console.WriteLine(Now.ToString & ": CreateNewCount_Index=" & FWriter.CreateNewCount_Index & ", CreateNewCount_Block=" & FWriter.CreateNewCount_Block)
-            End If
+        If FairyDatabase.Settings.IfDebugMode Then
+            'Dim FWriter As FileBufferWriter = Page.GetPage(1).PageFileBufferWriter
+            'If FWriter IsNot Nothing Then
+            '    Console.WriteLine(Now.ToString & ": CreateNewCount_Index=" & FWriter.CreateNewCount_Index & ", CreateNewCount_Block=" & FWriter.CreateNewCount_Block)
+            'End If
         End If
 
         If IfVerifyData Then
@@ -290,7 +297,7 @@ Public Class WritePerformanceTest
             ManualResetEvents(ThreadID - 1).WaitOne()
         Next
 
-        Page.FlushAll()
+        Database.FlushTable(TableName)
 
         'Output Result
         Dim MSeconds As Decimal = Now.Subtract(StartTime).TotalMilliseconds
@@ -323,7 +330,7 @@ Public Class WritePerformanceTest
             If DataID <= 0 Then Exit Do
 
             Dim FData As New Data(DataID, SampleBytes)
-            Page.Write(FData)
+            Database.Write(TableName, FData)
 
             'Console.WriteLine("(" & ThreadID & ") Write " & DataID & " ok.")
         Loop
@@ -385,7 +392,7 @@ Public Class WritePerformanceTest
 
 #Region "Tools"
     Private Shared Sub PrintFileLength()
-        For Each PageItem In Page.Pages
+        For Each PageItem In Database.GetTable(TableName).Pages
             If PageItem.Value IsNot Nothing Then
                 Try
                     Dim FStream As System.IO.FileStream = System.IO.File.Open(PageItem.Value.FilePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite)
@@ -405,7 +412,7 @@ Public Class WritePerformanceTest
         Dim ErrorCount As Integer = 0
 
         For DataID = 1 To WriteNumber
-            Dim FData As Data = Page.Read(DataID)
+            Dim FData As Data = Database.Read(TableName, DataID)
 
             If FData Is Nothing OrElse FData.Value Is Nothing Then
                 ErrorCount = ErrorCount + 1
@@ -427,8 +434,8 @@ Public Class WritePerformanceTest
 
     Private Shared Sub ClearAndInitResources()
         'Clear Page Files and Memory
-        If Page.Pages IsNot Nothing Then
-            For Each PageItem In Page.Pages
+        If Database.GetTable(TableName).Pages IsNot Nothing Then
+            For Each PageItem In Database.GetTable(TableName).Pages
                 If PageItem.Value IsNot Nothing Then
                     Try
                         PageItem.Value.ClearPageHeaderMemory()
@@ -443,8 +450,8 @@ Public Class WritePerformanceTest
             Next
         End If
 
-        If System.IO.Directory.Exists(Config.DatabaseFolderPath) Then
-            For Each FilePath In System.IO.Directory.GetFiles(Config.DatabaseFolderPath, "*.fdb", System.IO.SearchOption.AllDirectories)
+        If System.IO.Directory.Exists(Database.DatabaseConfig.DatabaseFolderPath) Then
+            For Each FilePath In System.IO.Directory.GetFiles(Database.DatabaseConfig.DatabaseFolderPath, "*.fdb", System.IO.SearchOption.AllDirectories)
                 Try
                     System.IO.File.Delete(FilePath)
                 Catch ex As Exception
@@ -453,7 +460,7 @@ Public Class WritePerformanceTest
             Next
         End If
 
-        Page.Pages = New Concurrent.ConcurrentDictionary(Of Int64, Page)
+        Database.GetTable(TableName).Pages = New Concurrent.ConcurrentDictionary(Of Int64, Page)
 
         'Init CurrentDataID, NextDataIDs
         CurrentDataID = 0
