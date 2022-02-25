@@ -382,7 +382,7 @@ Public Class Page
 #Region "Length Basic Functions"
     Private Function ReadLengthFromMemory() As Int64
         Dim FBytes As Byte() = PageHeaderMemory.Read(0, 8)
-        Return BitConverter.ToInt64(FBytes)
+        Return BitConverter.ToInt64(FBytes, 0)
     End Function
 
     Private Sub WriteLengthToMemory(ByVal Length As Int64)
@@ -414,7 +414,7 @@ Public Class Page
         FStream.Read(FBytes, 0, 8)
 
         'Get Length
-        Dim Length As Int64 = BitConverter.ToInt64(FBytes)
+        Dim Length As Int64 = BitConverter.ToInt64(FBytes, 0)
 
         'Return value
         Return Length
@@ -439,7 +439,7 @@ Public Class Page
 
         'Write
         Dim FBytes As Byte() = BitConverter.GetBytes(Length)
-        FStream.Write(FBytes)
+        FStream.Write(FBytes, 0, FBytes.Count)
 
         If Settings.IfDebugMode Then
             Console.WriteLine("Write Length to File: " & Length)
@@ -656,7 +656,7 @@ Public Class Page
         FStream.Position = Position
 
         'Write
-        FStream.Write(Bytes)
+        FStream.Write(Bytes, 0, Bytes.Count)
 
         If Settings.IfDebugMode Then
             Console.WriteLine("Write Header to File.")
@@ -802,7 +802,8 @@ Public Class Page
                         FStream2 = File.Open(PendingRemoveBlocksFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)
                         FStream2.Position = FStream2.Length
 
-                        FStream2.Write(CurrentData.PageRemoveBlockBytes)
+                        Dim FBytes() As Byte = CurrentData.PageRemoveBlockBytes
+                        FStream2.Write(FBytes, 0, FBytes.Count)
                         FStream2.Flush()
                         FStream2.Close()
                         FStream2.Dispose()

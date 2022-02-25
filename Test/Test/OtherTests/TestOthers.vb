@@ -100,7 +100,7 @@ Public Class TestOthers
 
                 ReDim Preserve num(10)
 
-                FariyDatabaseCSharp.Test.Start()
+                'FariyDatabaseCSharp.Test.Start()
 
         End Select
     End Sub

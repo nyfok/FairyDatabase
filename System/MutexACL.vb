@@ -26,21 +26,19 @@ Public Class MutexACL
 
         If FMutex Is Nothing Then
             Try
-                'Open Existing
-                Dim FMutexRights As System.Security.AccessControl.MutexRights = MutexRights.FullControl
-                FMutex = Threading.MutexAcl.OpenExisting(Name, FMutexRights)
-            Catch ex As Threading.WaitHandleCannotBeOpenedException
-                'Console.WriteLine("Mutex does not exist.")
-
                 Dim FMutexSecurity As New System.Security.AccessControl.MutexSecurity
                 Dim FMutexAccessRule As MutexAccessRule
                 Dim User As String = "everyone"
                 FMutexAccessRule = New MutexAccessRule(User, MutexRights.FullControl, AccessControlType.Allow)
                 FMutexSecurity.AddAccessRule(FMutexAccessRule)
 
-                'Create Mutex
-                FMutex = Threading.MutexAcl.Create(True, Name, IfCreateNewMutex, FMutexSecurity)
+                'Create or Open Mutex
+                FMutex = New Mutex(True, Name, IfCreateNewMutex, FMutexSecurity)
                 'Console.WriteLine("IfCreateNewMutex: " & IfCreateNewMutex)
+
+            Catch ex As Threading.WaitHandleCannotBeOpenedException
+                Throw ex
+                Return
 
             Catch ex As UnauthorizedAccessException
                 'Console.WriteLine("Unauthorized access: {0}", ex.Message)
@@ -65,6 +63,7 @@ Public Class MutexACL
 
     End Sub
 
+    Private ReleaseLock As New Object
     Public Sub Release()
         If FMutex Is Nothing Then Return
         FMutex.ReleaseMutex()

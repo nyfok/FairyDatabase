@@ -91,7 +91,7 @@
 
             Dim FBytes As Byte() = Bytes.Clone
             ReDim Preserve FBytes(7)
-            ID = BitConverter.ToInt64(FBytes)
+            ID = BitConverter.ToInt64(FBytes, 0)
         End Set
     End Property
 
@@ -110,7 +110,7 @@
             End If
 
             Dim FBytes As Byte() = Bytes.Clone
-            StartPOS = BitConverter.ToInt64(FBytes)
+            StartPOS = BitConverter.ToInt64(FBytes, 0)
         End Set
     End Property
 
@@ -131,7 +131,7 @@
 
             Dim FBytes As Byte() = Bytes.Clone
             ReDim Preserve FBytes(7)
-            Length = BitConverter.ToInt64(FBytes)
+            Length = BitConverter.ToInt64(FBytes, 0)
         End Set
     End Property
 
@@ -152,7 +152,7 @@
 
             Dim FBytes As Byte() = Bytes.Clone
             ReDim Preserve FBytes(7)
-            BlockLength = BitConverter.ToInt64(FBytes)
+            BlockLength = BitConverter.ToInt64(FBytes, 0)
         End Set
     End Property
 
