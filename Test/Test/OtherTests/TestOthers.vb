@@ -4,7 +4,7 @@ Public Class TestOthers
 
     Public Shared Sub Start()
 
-        Select Case 7
+        Select Case 8
             Case 1
                 TestSharedMemory()
             Case 2
@@ -100,7 +100,10 @@ Public Class TestOthers
 
                 ReDim Preserve num(10)
 
-                FariyDatabaseCSharp.Test.Start()
+                'FariyDatabaseCSharp.Test.Start()
+
+            Case 8
+                FlushAllTest()
 
         End Select
     End Sub
@@ -238,4 +241,43 @@ Public Class TestOthers
         Next
     End Sub
 
+
+#Region "Hotfix - Flush all test"
+
+    Public Shared Sub FlushAllTest()
+        FairyDatabase.Config.Init()
+        FairyDatabase.Config.IfDebugMode = False
+        Console.WriteLine("Start")
+        'Dim temp As New Page(100000000)
+        For i = 0 To 5
+            Dim newThread As System.Threading.Thread = New System.Threading.Thread(New System.Threading.ThreadStart(AddressOf FlushAllTestThread))
+            newThread.Name = i
+            newThread.Start()
+        Next
+    End Sub
+
+    Private Shared Sub FlushAllTestThread()
+        Dim random As Random = New Random()
+
+        For DataID As Int64 = (Int64.Parse(System.Threading.Thread.CurrentThread.Name) * 1000) + 1 To (Int64.Parse(System.Threading.Thread.CurrentThread.Name) * 1000) + 100
+            'long randnumber = (random.NextDouble() * 100);
+            'Console.WriteLine("Thread")
+            Dim identifier As String = "thread " & System.Threading.Thread.CurrentThread.Name & " at " & Date.Now.ToFileTimeUtc()
+            Console.WriteLine("DataID=" & DataID)
+
+            Dim FData As New Data(DataID)
+            Console.WriteLine(identifier & " going to write """ & identifier & """ at " & DataID)
+            'Console.WriteLine("bytes are " & System.Text.Encoding.UTF8.GetBytes(identifier).Length)
+            FData.Value = System.Text.Encoding.UTF8.GetBytes(identifier)
+
+            Page.Write(FData)
+            Page.FlushAll()
+            Console.WriteLine(identifier & " is about to read " & DataID)
+            Dim bytes As Byte() = Page.Read(DataID).Value()
+            Console.Write("Length is " & bytes.Length)
+            Console.WriteLine(identifier & " found """ & Text.Encoding.UTF8.GetString(bytes) & """")
+        Next
+    End Sub
+
+#End Region
 End Class

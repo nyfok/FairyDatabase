@@ -966,7 +966,15 @@ Public Class Page
 
 #Region "Dispose"
 
+    Private FlushLock As New Object
+
     Public Sub Flush()
+        SyncLock FlushLock
+            ExecuteFlush()
+        End SyncLock
+    End Sub
+
+    Public Sub ExecuteFlush()
         'Update Length To File
         If UpdateHeaderToFileTimer IsNot Nothing Then
             Try
@@ -1011,8 +1019,8 @@ Public Class Page
             ' TODO: 释放未托管的资源(未托管的对象)并重写终结器
             ' TODO: 将大型字段设置为 null
 
-            'Flush
-            Flush()
+            'Execute Flush
+            ExecuteFlush()
 
             'Clear PageFileBufferWriter
             If PageFileBufferWriter IsNot Nothing Then
@@ -1036,12 +1044,12 @@ Public Class Page
     End Sub
 
 
-    ' ' TODO: 仅当“Dispose(disposing As Boolean)”拥有用于释放未托管资源的代码时才替代终结器
-    ' Protected Overrides Sub Finalize()
-    '     ' 不要更改此代码。请将清理代码放入“Dispose(disposing As Boolean)”方法中
-    '     Dispose(disposing:=False)
-    '     MyBase.Finalize()
-    ' End Sub
+    '' TODO: 仅当“Dispose(disposing As Boolean)”拥有用于释放未托管资源的代码时才替代终结器
+    'Protected Overrides Sub Finalize()
+    '    ' 不要更改此代码。请将清理代码放入“Dispose(disposing As Boolean)”方法中
+    '    Dispose(disposing:=False)
+    '    MyBase.Finalize()
+    'End Sub
 
     Public Sub Dispose() Implements IDisposable.Dispose
         ' 不要更改此代码。请将清理代码放入“Dispose(disposing As Boolean)”方法中

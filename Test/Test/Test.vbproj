@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\FariyDatabaseCSharp\FariyDatabaseCSharp.csproj" />
     <ProjectReference Include="..\..\FairyDatabase.vbproj" />
   </ItemGroup>
 
